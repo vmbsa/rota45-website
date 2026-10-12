@@ -56,6 +56,7 @@ body{
 body.nav-open{overflow:hidden}
 img{max-width:100%;display:block}
 img[data-failed]{display:none}
+[hidden]{display:none !important}
 a{color:inherit;text-decoration:none}
 button{font:inherit;cursor:pointer}
 :focus-visible{outline:3px solid var(--red);outline-offset:3px}
@@ -224,6 +225,39 @@ h1 .em::after{
 .hero-meta b{
   display:block;margin-bottom:2px;font-family:var(--display);font-style:italic;
   font-weight:800;font-size:26px;letter-spacing:0;color:var(--ink);
+}
+
+/* last trip card (hero) */
+.trip-tag{width:max-content;padding:3px 9px;background:var(--red);color:#fff;transform:skewX(-10deg)}
+.trip-route{color:#fff;font-size:12px;letter-spacing:.12em}
+.trip-card .lm-coord{text-transform:uppercase}
+.trip-card .lm-hud{padding-bottom:62px}
+.trip-time{position:absolute;left:24px;right:66px;bottom:16px;display:flex;align-items:center;gap:12px}
+.trip-card:not(.ready) .trip-time{display:none}
+.tt-play{
+  flex:0 0 auto;width:32px;height:32px;display:grid;place-items:center;padding:0;border:1px solid rgba(255,255,255,.3);
+  border-radius:2px;background:rgba(11,11,12,.6);color:#fff;transition:background .2s,border-color .2s;
+}
+.tt-play:hover{background:var(--red);border-color:var(--red)}
+.tt-play .i-play,.tt-play.paused .i-pause{display:none}
+.tt-play.paused .i-play{display:block}
+.trip-time input{
+  --fill:0%;flex:1;min-width:0;height:26px;margin:0;background:none;cursor:pointer;
+  -webkit-appearance:none;appearance:none;
+}
+.trip-time input::-webkit-slider-runnable-track{
+  height:3px;background:linear-gradient(90deg,var(--red) var(--fill),rgba(255,255,255,.25) var(--fill));
+}
+.trip-time input::-moz-range-track{height:3px;background:rgba(255,255,255,.25)}
+.trip-time input::-moz-range-progress{height:3px;background:var(--red)}
+.trip-time input::-webkit-slider-thumb{
+  -webkit-appearance:none;width:14px;height:20px;margin-top:-8.5px;border:0;border-radius:2px;background:#fff;transform:skewX(-12deg);
+}
+.trip-time input::-moz-range-thumb{width:14px;height:20px;border:0;border-radius:2px;background:#fff;transform:skewX(-12deg)}
+.trip-time input:focus-visible{outline:2px solid var(--red);outline-offset:4px}
+.trip-time output{
+  min-width:58px;text-align:right;font-family:var(--mono);font-size:12px;font-weight:700;letter-spacing:.06em;
+  color:#fff;font-variant-numeric:tabular-nums;white-space:nowrap;
 }
 
 /* speed streaks band */
@@ -628,24 +662,32 @@ footer a:hover{color:#fff}
       </div>
     </div>
 
-    <!-- live position: map + 3D van (static test position) -->
-    <aside class="live-map cut" data-rise style="transition-delay:.3s" aria-label="Posição da carrinha no mapa">
+    <!-- last trip: the van drives it on the map, on a loop (route from a static file) -->
+    <aside class="live-map trip-card cut" data-rise style="transition-delay:.3s" aria-label="A última viagem da Rota 45">
       <div class="lm-fallback" aria-hidden="true"></div>
-      <div class="lm-canvas" id="liveMap"></div>
+      <div class="lm-canvas" id="tripMap"></div>
       <div class="lm-hud" aria-hidden="true">
         <div class="lm-top">
           <div class="lm-id">
-            <span class="live">Live</span>
-            <span data-i18n="track.label">Sprinter · Rota 45</span>
+            <span class="trip-tag" data-i18n="trip.label">Última viagem</span>
+            <span class="trip-route" id="tripRoute"></span>
           </div>
-          <div class="lm-clock" id="clock">--:--:--<small>LIS</small></div>
+          <div class="lm-clock" id="tripKm"></div>
         </div>
-        <div class="lm-coord" id="lmCoord">38.76073° N <span>/</span> 9.13311° W</div>
+        <div class="lm-coord" id="tripMeta"></div>
       </div>
       <div class="lm-ctrl">
-        <button type="button" id="lmIn" aria-label="Aproximar"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></button>
-        <button type="button" id="lmOut" aria-label="Afastar"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M5 12h14"/></svg></button>
-        <button type="button" id="lmHome" aria-label="Centrar na carrinha"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="1.6" fill="currentColor"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/></svg></button>
+        <button type="button" id="tIn" aria-label="Aproximar"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></button>
+        <button type="button" id="tOut" aria-label="Afastar"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M5 12h14"/></svg></button>
+        <button type="button" id="tHome" aria-label="Ver a viagem inteira"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="1.6" fill="currentColor"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/></svg></button>
+      </div>
+      <div class="trip-time">
+        <button type="button" class="tt-play" id="tripPlay" aria-label="Pausa">
+          <svg class="i-pause" width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M6 4h4v16H6zM14 4h4v16h-4z"/></svg>
+          <svg class="i-play" width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M7 4l13 8-13 8z"/></svg>
+        </button>
+        <input type="range" id="tripTime" min="0" max="1000" step="1" value="0" aria-label="Linha do tempo da viagem">
+        <output id="tripTimeOut" for="tripTime">0 h 00</output>
       </div>
     </aside>
   </div>
@@ -1025,6 +1067,7 @@ var I18N = {
 
     'streak.1':'Punctuality','streak.2':'National & International','streak.3':'24 Hours',
 
+    'trip.label':'Last trip',
     'kick.about':'About us','about.h2':'Who we are',
     'about.visual':'20 years<br>on the road',
     'about.p1':'Over 20 years in freight transport, with flexible schedules and pricing tailored to each client.',
@@ -1154,18 +1197,6 @@ if ('IntersectionObserver' in window && !location.hash){
   revealables.forEach(function(el){ el.classList.add('in'); });
 }
 
-/* ============================================================
-   6. LIVE CLOCK (Lisbon)
-   ============================================================ */
-var clockEl = document.getElementById('clock');
-function tickClock(){
-  var t;
-  try { t = new Date().toLocaleTimeString('pt-PT', {hour12:false, timeZone:'Europe/Lisbon'}); }
-  catch(e){ t = new Date().toTimeString().slice(0,8); }
-  clockEl.innerHTML = t + '<small>LIS</small>';
-}
-tickClock();
-setInterval(tickClock, 1000);
 document.getElementById('yr').textContent = new Date().getFullYear();
 
 /* ============================================================
@@ -1220,26 +1251,92 @@ form.addEventListener('submit', function(e){
 </script>
 
 <!-- ============================================================
-     9. LIVE MAP — MapLibre with OpenFreeMap dark tiles, plus a
-        three.js Sprinter built in code. Test version: the van
-        sits at a fixed position.
+     9. LAST TRIP — route map (MapLibre, OpenFreeMap) where the van
+        drives the last trip on a loop. The route comes from a static
+        file, so visitors never call a routing service.
      ============================================================ -->
 <script src="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js" defer></script>
 <script type="importmap">
-{ "imports": { "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js" } }
+{ "imports": {
+  "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+  "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+} }
 </script>
 <script type="module">
-import { mountLiveMap } from './assets/js/live-map.js';
+import { mountRouteMap } from './assets/js/live-map.js';
+import { estimate, formatDuration } from './assets/js/route.js';
+import { loadSprinter, CREDIT } from './assets/js/sprinter-model.js';
 
-mountLiveMap({
-  el: document.getElementById('liveMap'),
-  card: document.querySelector('.live-map'),
-  van: { lng: -9.133111, lat: 38.760731, heading: 0.6 }, /* test position; heading in radians */
-  coordEl: document.getElementById('lmCoord'),
-  zoomIn: document.getElementById('lmIn'),
-  zoomOut: document.getElementById('lmOut'),
-  home: document.getElementById('lmHome')
-});
+/* the detailed Sprinter downloads while the map starts; the built-in van shows meanwhile */
+var model = loadSprinter('assets/models/sprinter.glb');
+
+var card = document.querySelector('.trip-card');
+fetch('assets/data/ultima-viagem.json')
+  .then(function(r){ return r.json(); })
+  .then(function(trip){
+    var en = document.documentElement.lang === 'en';
+    document.getElementById('tripRoute').textContent = trip.from + ' → ' + trip.to;
+    document.getElementById('tripKm').innerHTML = Math.round(trip.distance / 1000).toLocaleString('pt-PT') + '<small>km</small>';
+    document.getElementById('tripMeta').innerHTML = (en ? 'Time on the road' : 'Tempo de estrada')
+      + ' <span>/</span> ' + formatDuration(estimate(trip).total);
+    return mountRouteMap({
+      el: document.getElementById('tripMap'), card: card, runMs: 12000, model: model, credit: CREDIT,
+      zoomIn: document.getElementById('tIn'), zoomOut: document.getElementById('tOut'), home: document.getElementById('tHome')
+    }).then(function(m){
+      if (!m) return;
+      m.play(trip.line, trip.toCoord);
+
+      /* timeline: the thumb follows the van; dragging it moves the van, play/pause
+         keeps going from there. The label is time on the road at that point. */
+      var total = estimate(trip).total;
+      var slider = document.getElementById('tripTime'), out = document.getElementById('tripTimeOut');
+      var btn = document.getElementById('tripPlay'), dragging = false, resume = false;
+      function clock(f){
+        var sec = f * total;
+        return Math.floor(sec / 3600) + ' h ' + String(Math.floor(sec % 3600 / 60)).padStart(2, '0');
+      }
+      function show(f){
+        slider.value = Math.round(f * 1000);
+        slider.style.setProperty('--fill', (f * 100).toFixed(1) + '%');
+        out.textContent = clock(f);
+        slider.setAttribute('aria-valuetext', out.textContent);
+      }
+      function syncButton(){
+        var on = m.isPlaying(), en = document.documentElement.lang === 'en';
+        btn.classList.toggle('paused', !on);
+        btn.setAttribute('aria-label', on ? (en ? 'Pause' : 'Pausa') : (en ? 'Play' : 'Reproduzir'));
+      }
+      /* the km counter and the timeline both follow the van */
+      var kmEl = document.getElementById('tripKm'), shownKm = -1;
+      m.onProgress(function(f, d){
+        var k = Math.round(d / 1000);
+        if (k !== shownKm){ shownKm = k; kmEl.innerHTML = k.toLocaleString('pt-PT') + '<small>km</small>'; }
+        if (!dragging) show(f);
+      });
+      slider.addEventListener('pointerdown', function(){
+        dragging = true;
+        resume = m.isPlaying();
+        m.setPlaying(false);
+      });
+      slider.addEventListener('input', function(){
+        var f = slider.value / 1000;
+        m.seek(f);
+        show(f);
+      });
+      function release(){
+        if (!dragging) return;
+        dragging = false;
+        if (resume) m.setPlaying(true);
+        syncButton();
+      }
+      slider.addEventListener('pointerup', release);
+      slider.addEventListener('pointercancel', release);
+      slider.addEventListener('change', release);
+      btn.addEventListener('click', function(){ m.setPlaying(!m.isPlaying()); syncButton(); });
+      syncButton();
+    });
+  })
+  .catch(function(){ /* the dark fallback panel stays */ });
 </script>
 </body>
 </html>

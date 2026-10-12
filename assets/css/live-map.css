@@ -86,3 +86,14 @@
   .lm-clock{font-size:18px}
   .lm-coord{font-size:10.5px;letter-spacing:.08em}
 }
+
+/* location switched off by the manager: grey dot, no coordinates, a notice */
+.live-map.is-off .live::before{background:var(--grey-2);box-shadow:none;animation:none}
+.live-map.is-off .lm-coord{visibility:hidden}
+.lm-paused{
+  position:absolute;left:50%;top:50%;transform:translate(-50%,-50%) skewX(-10deg);display:none;
+  padding:9px 14px;background:rgba(11,11,12,.86);border:1px solid rgba(255,255,255,.2);
+  font-family:var(--mono);font-size:11px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;
+  color:#fff;white-space:nowrap;pointer-events:none;
+}
+.live-map.is-off .lm-paused{display:block}

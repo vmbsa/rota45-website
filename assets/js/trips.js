@@ -12,9 +12,6 @@ var memory = null; /* fallback when localStorage is blocked */
 export var BUSINESS_PHONE = '+351 967 951 060';
 export var BUSINESS_WA = '351967951060';
 
-/* test position of the van until it comes from a GPS */
-export var VAN_POSITION = { lng: -9.133111, lat: 38.760731, heading: 0.6 };
-
 function read(){
   try {
     var s = JSON.parse(localStorage.getItem(KEY));

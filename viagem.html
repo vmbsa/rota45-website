@@ -160,11 +160,12 @@ h1{font-size:clamp(36px,9vw,56px)}
     <aside class="live-map cut" aria-label="Posição da carrinha no mapa">
       <div class="lm-fallback" aria-hidden="true"></div>
       <div class="lm-canvas" id="liveMap"></div>
+      <div class="lm-paused">Localização em pausa</div>
       <div class="lm-hud" aria-hidden="true">
         <div class="lm-top">
           <div class="lm-id">
             <span class="live">Live</span>
-            <span>Sprinter · Rota 45</span>
+            <span class="lm-sub">Sprinter · Rota 45</span>
           </div>
           <div class="lm-clock" id="clock">--:--:--<small>LIS</small></div>
         </div>
@@ -193,12 +194,20 @@ h1{font-size:clamp(36px,9vw,56px)}
 
 <script src="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js" defer></script>
 <script type="importmap">
-{ "imports": { "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js" } }
+{ "imports": {
+  "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+  "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+} }
 </script>
 <script type="module">
 import * as T from './assets/js/trips.js';
 import { mountLiveMap, drawRoute } from './assets/js/live-map.js';
-import { tripEta, estimate, formatArrival, formatDuration, formatKm } from './assets/js/route.js';
+import { tripEta, route, estimate, formatArrival, formatDuration, formatKm } from './assets/js/route.js';
+import { currentPosition, publicPosition, subscribeLive } from './assets/js/live.js';
+import { loadSprinter, CREDIT } from './assets/js/sprinter-model.js';
+
+/* a change made in the management page (on this device) shows up here */
+subscribeLive(function(){ location.reload(); });
 
 var id = location.hash.slice(1);
 var mapReady = null; /* Promise of the map, once mounted */
@@ -219,12 +228,17 @@ function etaHtml(){
 function loadEta(t){
   if (eta.id === t.id) return;
   eta = {id:t.id, data:null, failed:false};
-  tripEta(t, T.VAN_POSITION).then(function(d){
+  /* the estimate uses the real position; the map only ever gets the public one */
+  tripEta(t, currentPosition()).then(function(d){
     if (eta.id !== t.id) return;
     if (d) eta.data = d; else eta.failed = true;
     var box = document.getElementById('etaBox');
     if (box) box.innerHTML = etaHtml();
-    if (d && mapReady) mapReady.then(function(map){ if (map) drawRoute(map, d.route.line, d.dest); });
+    var pub = publicPosition();
+    if (!d || !pub || !mapReady) return;
+    route(pub, d.dest).then(function(r){
+      if (r) mapReady.then(function(map){ if (map) drawRoute(map, r.line, d.dest); });
+    });
   });
 }
 
@@ -285,7 +299,9 @@ function render(){
     mapReady = mountLiveMap({
       el: document.getElementById('liveMap'),
       card: document.querySelector('.live-map'),
-      van: T.VAN_POSITION,
+      van: publicPosition(),
+      model: publicPosition() ? loadSprinter('assets/models/sprinter.glb') : null,
+      credit: CREDIT,
       coordEl: document.getElementById('lmCoord'),
       zoomIn: document.getElementById('lmIn'),
       zoomOut: document.getElementById('lmOut'),

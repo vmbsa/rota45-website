@@ -153,6 +153,34 @@ p{margin:0}
 .form-actions{display:flex;flex-wrap:wrap;gap:10px}
 .form-actions .btn{flex:1 1 180px}
 
+/* ---------- live location settings ---------- */
+.live-set{background:var(--ink-2);border:1px solid var(--line);border-radius:var(--r);padding:18px;display:grid;gap:18px}
+.switch{
+  display:flex;align-items:center;gap:16px;width:100%;padding:0;border:0;background:none;text-align:left;
+}
+.track{
+  flex:0 0 auto;position:relative;width:64px;height:36px;border-radius:18px;background:var(--ink-3);
+  border:1.5px solid var(--line-2);transition:background .2s,border-color .2s;
+}
+.track::after{
+  content:"";position:absolute;top:3px;left:3px;width:27px;height:27px;border-radius:50%;background:#fff;
+  transition:transform .2s;
+}
+.switch[aria-checked="true"] .track{background:var(--red);border-color:var(--red)}
+.switch[aria-checked="true"] .track::after{transform:translateX(28px)}
+.switch b{display:block;font-weight:600;font-size:17px}
+.switch .sub{display:block;color:var(--grey-1);font-size:14px}
+.delay{display:grid;gap:10px;transition:opacity .2s}
+.delay.off{opacity:.4}
+.seg{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:6px}
+.seg button{
+  padding:12px 4px;border:1.5px solid var(--line-2);border-radius:2px;background:transparent;
+  font-family:var(--display);font-style:italic;font-weight:800;font-size:15px;text-transform:uppercase;
+}
+.seg button[aria-checked="true"]{background:#fff;color:var(--ink);border-color:#fff}
+.seg button:disabled{cursor:default}
+.hint{color:var(--grey-1);font-size:14px}
+
 /* ---------- done ---------- */
 details.done{background:var(--ink-2);border:1px solid var(--line);border-radius:var(--r);padding:16px 18px}
 details.done summary{cursor:pointer;font-family:var(--display);font-style:italic;font-weight:800;text-transform:uppercase;font-size:18px}
@@ -250,6 +278,21 @@ details.done summary{cursor:pointer;font-family:var(--display);font-style:italic
     </form>
   </section>
 
+  <section aria-labelledby="liveTitle">
+    <div class="sec-title"><h2 id="liveTitle">Localização ao vivo</h2><span class="label" id="liveState"></span></div>
+    <div class="live-set">
+      <button type="button" class="switch" id="liveSwitch" role="switch" aria-checked="true">
+        <span class="track" aria-hidden="true"></span>
+        <span><b>Mostrar a carrinha no mapa</b><span class="sub" id="liveSub"></span></span>
+      </button>
+      <div class="delay" id="delayBox">
+        <span class="label" id="delayLabel">Atraso da posição</span>
+        <div class="seg" id="delaySeg" role="radiogroup" aria-labelledby="delayLabel"></div>
+        <p class="hint">Quem vê o mapa vê onde a carrinha estava há este tempo. A chegada prevista continua certa.</p>
+      </div>
+    </div>
+  </section>
+
   <details class="done" id="done">
     <summary>Concluídas <span id="doneCount"></span></summary>
     <ul id="doneList"></ul>
@@ -265,6 +308,7 @@ details.done summary{cursor:pointer;font-family:var(--display);font-style:italic
 <script type="module">
 import * as T from './assets/js/trips.js';
 import { tripEta, estimate, formatArrival, formatKm } from './assets/js/route.js';
+import { DELAYS, getLive, setLive, subscribeLive, currentPosition } from './assets/js/live.js';
 
 /* ---------- helpers ---------- */
 function esc(s){
@@ -345,7 +389,7 @@ function render(){
   }
   document.getElementById('now').innerHTML = now;
   if (c && c.to){
-    tripEta(c, T.VAN_POSITION).then(function(d){
+    tripEta(c, currentPosition()).then(function(d){
       var el = document.getElementById('nowEta');
       if (!el) return;
       el.querySelector('b').textContent = d
@@ -495,6 +539,38 @@ document.getElementById('reset').addEventListener('click', function(e){
   arm(e.target, 'Toque de novo para repor', function(){ T.resetExample(); toast('Exemplo reposto'); });
 });
 
+/* ---------- live location ---------- */
+function delayName(m){ return m === 0 ? 'Nenhum' : m < 60 ? m + ' min' : (m / 60) + ' h'; }
+
+function renderLive(){
+  var live = getLive();
+  var sw = document.getElementById('liveSwitch');
+  sw.setAttribute('aria-checked', String(live.enabled));
+  document.getElementById('liveState').textContent = live.enabled ? 'Ligada' : 'Desligada';
+  document.getElementById('liveSub').textContent = !live.enabled
+    ? 'Desligada: ninguém vê onde está a carrinha.'
+    : live.delayMin ? 'Ligada, com ' + delayName(live.delayMin) + ' de atraso.'
+    : 'Ligada: os clientes com link veem a posição.';
+  document.getElementById('delayBox').classList.toggle('off', !live.enabled);
+  document.getElementById('delaySeg').innerHTML = DELAYS.map(function(m){
+    return '<button type="button" role="radio" data-delay="' + m + '" aria-checked="' + (m === live.delayMin) + '"'
+      + (live.enabled ? '' : ' disabled') + '>' + delayName(m) + '</button>';
+  }).join('');
+}
+
+document.getElementById('liveSwitch').addEventListener('click', function(){
+  var on = !getLive().enabled;
+  setLive({enabled:on});
+  toast(on ? 'Localização ligada' : 'Localização desligada');
+});
+document.getElementById('delaySeg').addEventListener('click', function(e){
+  var b = e.target.closest('[data-delay]');
+  if (!b || b.disabled) return;
+  var m = Number(b.dataset.delay);
+  setLive({delayMin:m});
+  toast(m ? 'Atraso de ' + delayName(m) : 'Sem atraso');
+});
+
 /* ---------- password gate ----------
    Checked in the browser against a PBKDF2 hash: enough to keep visitors out of
    a page with example data. Real client data will need a server-side login. */
@@ -523,7 +599,9 @@ function unlock(){
   if (booted) return;
   booted = true;
   T.subscribe(render);
+  subscribeLive(renderLive);
   render();
+  renderLive();
   setInterval(render, 60000); /* keeps "há X min" current */
 }
 

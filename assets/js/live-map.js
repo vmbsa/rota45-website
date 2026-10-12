@@ -10,6 +10,9 @@ import * as THREE from 'three';
    zoomed in it is life size */
 var VAN_PX = 64, VAN_PX_NARROW = 36, NARROW = 520;
 var DEFAULT_VIEW = { zoom: 12.2, pitch: 50, bearing: 0 }; /* north up */
+/* with the location off the map shows the country, with no van on it */
+var OFF_CENTER = { lng: -8.1, lat: 39.6 };
+var OFF_VIEW = { zoom: 5.4, pitch: 30, bearing: 0 };
 var still = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
 
 function hasWebGL(){
@@ -22,25 +25,44 @@ export function formatCoord(van){
          Math.abs(van.lng).toFixed(5) + '° ' + (van.lng >= 0 ? 'E' : 'W');
 }
 
-/* opts: el, card, van {lng, lat, heading}, view?, coordEl?, zoomIn?, zoomOut?, home? */
+/* HUD text for the three states: live, live with a delay, off */
+export function setHud(card, van){
+  var label = card.querySelector('.live'), sub = card.querySelector('.lm-sub');
+  card.classList.toggle('is-off', !van);
+  if (label) label.textContent = van ? 'Live' : 'Offline';
+  if (sub) sub.textContent = 'Sprinter · ' + (van && van.delayMin ? '−' + van.delayMin + ' min' : 'Rota 45');
+}
+
+/* opts: el, card, van {lng, lat, heading, delayMin?} or null when the location is off,
+   view?, model? (Promise of a van Object3D), credit?, coordEl?, zoomIn?, zoomOut?, home? */
 export function mountLiveMap(opts){
-  var view = Object.assign({}, DEFAULT_VIEW, opts.view);
-  if (opts.coordEl) opts.coordEl.innerHTML = formatCoord(opts.van);
+  var view = Object.assign({}, opts.van ? DEFAULT_VIEW : OFF_VIEW, opts.view);
+  setHud(opts.card, opts.van);
+  if (opts.coordEl) opts.coordEl.innerHTML = opts.van ? formatCoord(opts.van) : '';
   if (!window.maplibregl || !hasWebGL()) return Promise.resolve(null);
   /* the livery is drawn with the site fonts, so wait for them */
+  return fontsReady().then(function(){ return start(opts, opts.van, view); });
+}
+
+/* the livery is drawn with the site fonts, so wait for them */
+function fontsReady(){
   return Promise.all([
     document.fonts.load("italic 900 100px 'Exo 2'"),
     document.fonts.load("700 30px 'Roboto Mono'")
-  ]).catch(function(){}).then(function(){ return start(opts, opts.van, view); });
+  ]).catch(function(){});
 }
 
-function start(opts, VAN, VIEW){
-  var el = opts.el, card = opts.card;
+function vanSize(el){
+  return function(){ return el.clientWidth < NARROW ? VAN_PX_NARROW : VAN_PX; };
+}
+
+/* dark map with the site's restyle, compact attribution and gesture help in Portuguese */
+function newMap(el, center, view, credit){
   var pt = document.documentElement.lang !== 'en';
   var map = new maplibregl.Map({
     container: el,
     style: 'https://tiles.openfreemap.org/styles/dark',
-    center: [VAN.lng, VAN.lat], zoom: VIEW.zoom, pitch: VIEW.pitch, bearing: VIEW.bearing,
+    center: center, zoom: view.zoom, pitch: view.pitch, bearing: view.bearing,
     minZoom: 3, maxZoom: 20, maxPitch: 70,
     /* Ctrl + scroll to zoom and two fingers to pan, so the page still scrolls normally */
     cooperativeGestures: true,
@@ -51,22 +73,27 @@ function start(opts, VAN, VIEW){
     } : {},
     attributionControl: false, antialias: true, fadeDuration: 0
   });
-  map.addControl(new maplibregl.AttributionControl({compact: true}), 'bottom-right');
+  map.addControl(new maplibregl.AttributionControl(credit ? {compact:true, customAttribution:credit} : {compact:true}), 'bottom-right');
   /* the dark style references a wood pattern it doesn't ship; a blank pixel keeps the console quiet */
   map.on('styleimagemissing', function(e){
     if (!map.hasImage(e.id)) map.addImage(e.id, {width:1, height:1, data:new Uint8Array(4)});
   });
-
-  var visible = true;
-  map.on('style.load', function(){
-    restyle(map);
-    map.addLayer(vanLayer(map, VAN, function(){ return visible; }, function(){
-      return el.clientWidth < NARROW ? VAN_PX_NARROW : VAN_PX;
-    }));
-  });
+  /* _r45Styled: the style is ready for our layers (isStyleLoaded() also waits for tiles) */
+  map.on('style.load', function(){ restyle(map); map._r45Styled = true; });
   map.on('load', function(){
     var a = el.querySelector('.maplibregl-ctrl-attrib');
     if (a){ a.classList.remove('maplibregl-compact-show'); a.removeAttribute('open'); }
+  });
+  return map;
+}
+
+function start(opts, VAN, VIEW){
+  var el = opts.el, card = opts.card;
+  var map = newMap(el, VAN ? [VAN.lng, VAN.lat] : [OFF_CENTER.lng, OFF_CENTER.lat], VIEW, opts.credit);
+
+  var visible = true;
+  map.on('style.load', function(){
+    if (VAN) map.addLayer(vanLayer(map, VAN, function(){ return visible; }, vanSize(el), opts.model));
   });
   map.once('idle', function(){ card.classList.add('ready'); });
 
@@ -82,8 +109,9 @@ function start(opts, VAN, VIEW){
   if (opts.zoomOut) opts.zoomOut.addEventListener('click', function(){ map.zoomOut(); });
   if (opts.home) opts.home.addEventListener('click', function(){
     if (map._r45Overview){ map._r45Overview(); return; } /* a route is drawn: show all of it */
+    var c = VAN || OFF_CENTER;
     map.flyTo({
-      center:[VAN.lng, VAN.lat], zoom:VIEW.zoom, pitch:VIEW.pitch, bearing:VIEW.bearing,
+      center:[c.lng, c.lat], zoom:VIEW.zoom, pitch:VIEW.pitch, bearing:VIEW.bearing,
       duration: still ? 0 : 1200
     });
   });
@@ -117,14 +145,110 @@ export function drawRoute(map, line, dest){
     var bounds = new maplibregl.LngLatBounds();
     line.forEach(function(c){ bounds.extend(c); });
     map._r45Overview = function(){
-      var cam = map.cameraForBounds(bounds, {padding:{top:90, bottom:110, left:120, right:100}, bearing:0});
+      var box = map.getContainer(), pad = Math.round(Math.min(box.clientWidth, box.clientHeight) * 0.18);
+      var cam = map.cameraForBounds(bounds, {padding:{top:pad + 40, bottom:pad + 30, left:pad, right:pad + 20}, bearing:0});
       if (!cam) return;
       map.easeTo({center:cam.center, zoom:cam.zoom - 0.25, pitch:35, bearing:0, duration: still ? 0 : 1400});
     };
     map._r45Overview();
   }
-  if (map.getLayer('van-3d')) go();
-  else map.once('idle', go);
+  if (map._r45Styled) go();
+  else map.once('style.load', go);
+}
+
+/* ---------- trip calculator: no live position, the van drives along the route ---------- */
+
+/* opts: el, card, runMs?, model? (Promise of a van Object3D), credit?, zoomIn?, zoomOut?, home?
+   →  Promise of {map, play(line, dest), setPlaying(bool), isPlaying(), seek(fraction),
+                  onProgress(fn(fraction, metres, total))} */
+export function mountRouteMap(opts){
+  if (!window.maplibregl || !hasWebGL()) return Promise.resolve(null);
+  return fontsReady().then(function(){
+    var el = opts.el, card = opts.card;
+    var home = {center:[-3.5, 44.2], zoom: el.clientWidth < NARROW ? 3.3 : 3.9, pitch:30, bearing:0};
+    var map = newMap(el, home.center, home, opts.credit);
+    map.once('idle', function(){ card.classList.add('ready'); });
+
+    var visible = true;
+    if ('IntersectionObserver' in window){
+      new IntersectionObserver(function(entries){
+        visible = entries[0].isIntersecting;
+        if (visible) map.triggerRepaint();
+      }).observe(card);
+    }
+
+    /* timeline: `phase` is time within one loop (the drive, then a short stop at the
+       flag); seek() jumps to a point. With reduced motion it starts paused. */
+    var trip = null, layer = false, playing = !still, phase = 0, last = null, listener = null;
+    var HOLD = 1800;
+    function runMs(){ return opts.runMs || Math.min(11000, Math.max(5000, trip.total / 250)); }
+    function position(){
+      if (!trip) return null;
+      var now = performance.now(), run = runMs();
+      if (playing && last !== null) phase = (phase + Math.min(100, now - last)) % (run + HOLD);
+      last = now;
+      var f = Math.min(1, phase / run);
+      if (listener) listener(f, f * trip.total, trip.total);
+      return pointAt(trip, f * trip.total);
+    }
+
+    function play(line, dest){
+      trip = measure(line);
+      phase = 0;
+      last = null;
+      /* the van goes in first so the route is drawn underneath it */
+      if (!layer){
+        layer = true;
+        var add = function(){ map.addLayer(vanLayer(map, position, function(){ return visible; }, vanSize(el), opts.model)); };
+        if (map._r45Styled) add(); else map.once('style.load', add);
+      }
+      drawRoute(map, line, dest);
+      map.triggerRepaint();
+    }
+
+    if (opts.zoomIn) opts.zoomIn.addEventListener('click', function(){ map.zoomIn(); });
+    if (opts.zoomOut) opts.zoomOut.addEventListener('click', function(){ map.zoomOut(); });
+    if (opts.home) opts.home.addEventListener('click', function(){
+      if (map._r45Overview){ map._r45Overview(); return; }
+      map.flyTo({center:home.center, zoom:home.zoom, pitch:home.pitch, bearing:0, duration: still ? 0 : 1200});
+    });
+    return {
+      map:map, play:play,
+      setPlaying:function(on){ playing = on; last = null; map.triggerRepaint(); },
+      isPlaying:function(){ return playing; },
+      seek:function(f){ if (trip){ phase = Math.max(0, Math.min(1, f)) * runMs(); map.triggerRepaint(); } },
+      onProgress:function(fn){ listener = fn; }
+    };
+  });
+}
+
+/* cumulative distance along a [lng, lat] line, in metres */
+function measure(line){
+  var cum = [0], total = 0;
+  for (var i = 1; i < line.length; i++){ total += metres(line[i - 1], line[i]); cum.push(total); }
+  return {line:line, cum:cum, total:total};
+}
+function metres(a, b){
+  var r = Math.PI / 180;
+  var x = (b[0] - a[0]) * r * Math.cos((a[1] + b[1]) / 2 * r), y = (b[1] - a[1]) * r;
+  return Math.sqrt(x * x + y * y) * 6371000;
+}
+function indexAt(trip, d){
+  var lo = 1, hi = trip.cum.length - 1;
+  while (lo < hi){ var mid = (lo + hi) >> 1; if (trip.cum[mid] < d) lo = mid + 1; else hi = mid; }
+  return lo;
+}
+/* point d metres along the route, facing a little further down the road */
+function pointAt(trip, d){
+  var l = trip.line;
+  if (l.length < 2) return {lng:l[0][0], lat:l[0][1], heading:0};
+  var i = indexAt(trip, d), c = trip.cum;
+  var f = Math.min(1, Math.max(0, (d - c[i - 1]) / ((c[i] - c[i - 1]) || 1)));
+  var lng = l[i - 1][0] + (l[i][0] - l[i - 1][0]) * f, lat = l[i - 1][1] + (l[i][1] - l[i - 1][1]) * f;
+  var j = Math.min(l.length - 1, indexAt(trip, Math.min(trip.total, d + 4000)));
+  var k = Math.max(0, Math.min(j, i) - 1);
+  var east = (l[j][0] - l[k][0]) * Math.cos(lat * Math.PI / 180), north = l[j][1] - l[k][1];
+  return {lng:lng, lat:lat, heading:Math.atan2(north, east)};
 }
 
 /* darker, cleaner basemap: only place names, visible streets, red motorways, low 3D blocks */
@@ -161,17 +285,18 @@ function restyle(map){
   }
 }
 
-function vanLayer(map, VAN, isVisible, vanPx){
-  var origin = maplibregl.MercatorCoordinate.fromLngLat([VAN.lng, VAN.lat], 0);
-  var metre = origin.meterInMercatorCoordinateUnits();
-  var cosLat = Math.cos(VAN.lat * Math.PI / 180);
+/* VAN is a fixed {lng, lat, heading} or a function returning one each frame
+   (heading: radians from east towards north) */
+function vanLayer(map, VAN, isVisible, vanPx, model){
+  var follow = typeof VAN === 'function';
   var yUp = new THREE.Matrix4().makeRotationX(Math.PI / 2);
-  var camera, scene, renderer, ring, vw = 0, vh = 0, t0 = performance.now();
+  var camera, scene, renderer, ring, van, vw = 0, vh = 0, t0 = performance.now();
 
   /* model space is y-up metres; the map is z-up mercator with y pointing south */
-  function modelMatrix(){
-    var metresPerPx = 40075016.686 * cosLat / (512 * Math.pow(2, map.getZoom()));
-    var s = metre * Math.max(1, vanPx() * metresPerPx / 5.93);
+  function modelMatrix(p){
+    var origin = maplibregl.MercatorCoordinate.fromLngLat([p.lng, p.lat], 0);
+    var metresPerPx = 40075016.686 * Math.cos(p.lat * Math.PI / 180) / (512 * Math.pow(2, map.getZoom()));
+    var s = origin.meterInMercatorCoordinateUnits() * Math.max(1, vanPx() * metresPerPx / 5.93);
     return new THREE.Matrix4()
       .makeTranslation(origin.x, origin.y, origin.z)
       .scale(new THREE.Vector3(s, -s, s))
@@ -187,13 +312,21 @@ function vanLayer(map, VAN, isVisible, vanPx){
       var key = new THREE.DirectionalLight(0xffffff, 2.4);
       key.position.set(4, 10, 6);
       scene.add(key);
-      var rim = new THREE.DirectionalLight(0xff2a3a, 1.2);
+      var rim = new THREE.DirectionalLight(0xff2a3a, 0.5);
       rim.position.set(-6, 4, -5);
       scene.add(rim);
 
-      var van = buildVan();
-      van.rotation.y = VAN.heading;
+      van = buildVan();
+      van.rotation.y = follow ? 0 : VAN.heading;
       scene.add(van);
+      /* the built-in van shows at once; a detailed model replaces it when it arrives */
+      if (model) model.then(function(m){
+        scene.remove(van);
+        m.rotation.y = van.rotation.y;
+        van = m;
+        scene.add(van);
+        map.triggerRepaint();
+      }).catch(function(){});
 
       ring = new THREE.Mesh(
         new THREE.RingGeometry(3.3, 3.6, 64),
@@ -209,19 +342,22 @@ function vanLayer(map, VAN, isVisible, vanPx){
     render: function(gl, matrix){
       var c = map.getCanvas();
       if (c.width !== vw || c.height !== vh){ vw = c.width; vh = c.height; renderer.setViewport(0, 0, vw, vh); }
-      camera.projectionMatrix = new THREE.Matrix4().fromArray(matrix).multiply(modelMatrix());
+      var p = follow ? VAN() : VAN;
+      if (!p) return;
+      if (follow) van.rotation.y = p.heading;
+      camera.projectionMatrix = new THREE.Matrix4().fromArray(matrix).multiply(modelMatrix(p));
       var t = still ? 0.35 : ((performance.now() - t0) / 1800) % 1;
       ring.scale.setScalar(1 + t * 1.6);
       ring.material.opacity = 0.8 * (1 - t);
       renderer.resetState();
       renderer.render(scene, camera);
-      if (!still && isVisible()) map.triggerRepaint();
+      if ((!still || follow) && isVisible()) map.triggerRepaint();
     }
   };
 }
 
 /* ---------- the van: Mercedes-Benz Sprinter, high roof, long wheelbase ---------- */
-function buildVan(){
+export function buildVan(){
   var g = new THREE.Group();
   var R = 2.95, H = 2.62, B = 0.42, BW = 1.9;   /* half length, roof, sill, body width */
   var FA = 2.05, RA = -2.25, WR = 0.36, ARCH = 0.44;
@@ -360,7 +496,7 @@ function canvasTex(c){
 }
 
 /* side livery; rearLeft says which end of the canvas is the back of the van */
-function livery(rearLeft){
+export function livery(rearLeft){
   var c = document.createElement('canvas');
   c.width = 1024; c.height = 470;
   var x = c.getContext('2d');
@@ -388,7 +524,7 @@ function livery(rearLeft){
   return canvasTex(c);
 }
 
-function rearLivery(){
+export function rearLivery(){
   var c = document.createElement('canvas');
   c.width = 512; c.height = 480;
   var x = c.getContext('2d');
