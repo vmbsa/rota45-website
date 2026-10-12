@@ -103,7 +103,7 @@ header.stuck .bar{height:64px}
 .logo{display:flex;align-items:center;flex:0 0 auto}
 .logo img{height:40px;width:auto;transition:height .35s var(--ease)}
 header.stuck .logo img{height:34px}
-.logo img[data-failed]+.lockup{display:flex}
+.logo img[data-failed]+.lockup,.logo picture:has(img[data-failed])+.lockup{display:flex}
 .lockup{display:none;align-items:center;gap:10px}
 .lockup .num{
   font-family:var(--display);font-style:italic;font-weight:900;font-size:30px;
@@ -295,7 +295,7 @@ section{position:relative}
 .pillar b{font-family:var(--display);font-style:italic;font-weight:800;font-size:18px;text-transform:uppercase;line-height:1}
 
 /* ---------- serviços ---------- */
-.cards{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}
+.cards{display:grid;grid-template-columns:repeat(4,1fr);gap:18px}
 .card{
   position:relative;background:#fff;border:1px solid var(--line);border-radius:var(--r);
   padding:28px 26px 30px;overflow:hidden;
@@ -316,7 +316,7 @@ section{position:relative}
 .card:hover .ico{background:var(--red);transform:rotate(-6deg) scale(1.06)}
 .card .ico svg{width:24px;height:24px}
 .card .no{font-family:var(--mono);font-size:11.5px;font-weight:700;letter-spacing:.18em;color:var(--grey-2)}
-.card h3{font-size:20px;line-height:1.06}
+.card h3{font-size:19px;line-height:1.06}
 .card p{margin-top:8px;font-size:15.5px;color:var(--grey-1)}
 
 /* ---------- frota ---------- */
@@ -354,24 +354,6 @@ section{position:relative}
 .ci p,.ci a{font-size:16.5px;line-height:1.45}
 .ci a{border-bottom:1px solid var(--line);transition:border-color .2s,color .2s}
 .ci a:hover{color:var(--red-dk);border-color:var(--red)}
-
-/* map — dark "track map" until loaded */
-.map{
-  position:relative;margin-top:18px;aspect-ratio:16/9;border-radius:var(--r);
-  overflow:hidden;background:var(--ink);display:grid;place-items:center;
-}
-.map iframe{position:absolute;inset:0;width:100%;height:100%;border:0}
-.map .load{position:relative;text-align:center;color:#fff;padding:24px}
-.map .load::before{
-  content:"";position:absolute;inset:-120px;
-  background:
-    repeating-linear-gradient(0deg,rgba(255,255,255,.05) 0 1px,transparent 1px 34px),
-    repeating-linear-gradient(90deg,rgba(255,255,255,.05) 0 1px,transparent 1px 34px);
-}
-.map .load b{
-  position:relative;display:block;margin-bottom:14px;font-family:var(--display);
-  font-style:italic;font-weight:800;font-size:21px;text-transform:uppercase;
-}
 
 .panel{background:#fff;border-radius:var(--r);border-top:4px solid var(--red);padding:30px;box-shadow:var(--shadow-lg)}
 form{display:grid;gap:16px}
@@ -429,9 +411,32 @@ footer a:hover{color:#fff}
   font-family:var(--mono);font-size:11.5px;letter-spacing:.1em;text-transform:uppercase;
 }
 
-/* back to top */
+/* devices in dark mode darken the page themselves, which hid the dark logo:
+   the header goes dark on purpose and shows the white logo */
+@media (prefers-color-scheme: dark){
+  header{background:rgba(11,11,12,.92)}
+  header.stuck{box-shadow:0 10px 30px -18px rgba(0,0,0,.9)}
+  .hdr-checker{background-image:conic-gradient(#fff 90deg,transparent 90deg 180deg,#fff 180deg 270deg,transparent 270deg)}
+  nav.desk a{color:#E8E8EC}
+  .lang{border-color:rgba(255,255,255,.22)}
+  .lang button{color:var(--grey-2)}
+  .lang button[aria-pressed="true"]{background:#fff;color:var(--ink)}
+  .lang button:not([aria-pressed="true"]):hover{background:rgba(255,255,255,.08);color:#fff}
+  .burger{background:transparent;border-color:rgba(255,255,255,.22)}
+  .burger i{background:#fff}
+}
+
+/* floating WhatsApp button */
+.wa-float{
+  position:fixed;right:22px;bottom:22px;z-index:100;width:56px;height:56px;border-radius:50%;
+  background:#25D366;color:#fff;display:grid;place-items:center;
+  box-shadow:0 12px 26px -10px rgba(0,0,0,.5);transition:transform .2s var(--ease);
+}
+.wa-float:hover{transform:translateY(-2px) scale(1.05)}
+
+/* back to top, stacked above the WhatsApp button */
 #top{
-  position:fixed;right:22px;bottom:22px;z-index:100;
+  position:fixed;right:26px;bottom:92px;z-index:100;
   width:48px;height:48px;border:0;border-radius:2px;background:var(--ink);color:#fff;
   display:grid;place-items:center;opacity:0;pointer-events:none;
   transform:translateY(12px);transition:.3s var(--ease);box-shadow:var(--shadow-lg);
@@ -461,7 +466,8 @@ footer a:hover{color:#fff}
 }
 @media (max-width:900px){
   nav.desk{display:none}
-  .burger{display:block;margin-left:auto}
+  .tools{margin-left:auto}
+  .burger{display:block}
   .tools .btn--red{display:none}
   .hero-grid,.about,.quote{grid-template-columns:1fr}
   .about-visual{aspect-ratio:16/10}
@@ -505,12 +511,12 @@ footer a:hover{color:#fff}
 
   /* services: compact rows with the icon on the left */
   .cards{grid-template-columns:1fr;gap:10px}
-  .card{display:grid;grid-template-columns:44px minmax(0,1fr);column-gap:16px;padding:18px}
-  .card-top{grid-row:1 / span 2;margin:0}
+  .card{display:grid;grid-template-columns:44px minmax(0,1fr);gap:12px 14px;align-items:center;padding:18px}
+  .card-top{margin:0}
   .card .no{display:none}
   .card .ico{width:44px;height:44px}
-  .card h3{grid-column:2;font-size:17px;align-self:center}
-  .card p{grid-column:2;margin-top:4px;font-size:14.5px}
+  .card h3{font-size:17px}
+  .card p{grid-column:1 / -1;margin-top:0;font-size:14.5px}
 
   /* fleet: swipe through the photos */
   .fleet{
@@ -527,7 +533,6 @@ footer a:hover{color:#fff}
   .row2{grid-template-columns:1fr}
   .row2.keep2{grid-template-columns:1fr 1fr}
   .ci{padding:16px}
-  .map{aspect-ratio:2/1}
   .panel{padding:22px 18px}
   .form-actions{display:grid;grid-template-columns:1fr;gap:10px}
   .form-actions .btn{justify-content:center}
@@ -539,7 +544,8 @@ footer a:hover{color:#fff}
   .fgrid{grid-template-columns:1fr;gap:28px;padding-bottom:36px}
   .fgrid > div:nth-child(2) ul{display:flex;flex-wrap:wrap;gap:8px 20px}
   .fbot{flex-direction:column;gap:6px}
-  #top{right:14px;bottom:14px;width:44px;height:44px}
+  .wa-float{right:14px;bottom:14px;width:52px;height:52px}
+  #top{right:18px;bottom:78px;width:44px;height:44px}
 }
 </style>
 </head>
@@ -551,7 +557,10 @@ footer a:hover{color:#fff}
 <header id="hdr">
   <div class="wrap bar">
     <a href="#top-anchor" class="logo" aria-label="Rota 45 Transportes">
-      <img src="assets/logo.png" alt="Rota 45 Transportes — Transportes Unipessoal Lda.">
+      <picture>
+        <source srcset="assets/logo-white.png" media="(prefers-color-scheme: dark)">
+        <img src="assets/logo.png" alt="Rota 45 Transportes — Transportes Unipessoal Lda.">
+      </picture>
       <span class="lockup"><span class="num">45</span><span class="txt">Rota&nbsp;45</span></span>
     </a>
 
@@ -733,7 +742,7 @@ footer a:hover{color:#fff}
         <p data-i18n="s3.d">Saída imediata, entrega direta.</p>
       </article>
 
-      <article class="card" data-rise>
+      <article class="card" data-rise style="transition-delay:.18s">
         <div class="card-top">
           <div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 7.5V12l3.5 2"/></svg></div>
           <span class="no">S/04</span>
@@ -742,7 +751,7 @@ footer a:hover{color:#fff}
         <p data-i18n="s4.d">Também fora de horas e ao fim de semana.</p>
       </article>
 
-      <article class="card" data-rise style="transition-delay:.06s">
+      <article class="card" data-rise>
         <div class="card-top">
           <div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-5 9 5-9 5z"/><path d="M3 9v6l9 5 9-5V9"/></svg></div>
           <span class="no">S/05</span>
@@ -751,13 +760,31 @@ footer a:hover{color:#fff}
         <p data-i18n="s5.d">Mudanças e envios porta a porta.</p>
       </article>
 
-      <article class="card" data-rise style="transition-delay:.12s">
+      <article class="card" data-rise style="transition-delay:.06s">
         <div class="card-top">
           <div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h16v14H4z"/><path d="M4 10h16M9 3v4M15 3v4"/></svg></div>
           <span class="no">S/06</span>
         </div>
         <h3 data-i18n="s6.t">Provas desportivas e eventos</h3>
         <p data-i18n="s6.d">Material de competição, sempre a horas.</p>
+      </article>
+
+      <article class="card" data-rise style="transition-delay:.12s">
+        <div class="card-top">
+          <div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M5 11V8a2 2 0 012-2h10a2 2 0 012 2v3"/><path d="M3 13a2 2 0 014 0v2h10v-2a2 2 0 014 0v5H3z"/><path d="M6 18v2M18 18v2"/></svg></div>
+          <span class="no">S/07</span>
+        </div>
+        <h3 data-i18n="s7.t">Mudanças e móveis</h3>
+        <p data-i18n="s7.d">Casas e escritórios, com cuidado peça a peça.</p>
+      </article>
+
+      <article class="card" data-rise style="transition-delay:.18s">
+        <div class="card-top">
+          <div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7h18v13H3z"/><path d="M9 7V5a1 1 0 011-1h4a1 1 0 011 1v2"/><path d="M3 13h18"/></svg></div>
+          <span class="no">S/08</span>
+        </div>
+        <h3 data-i18n="s8.t">Serviços empresariais</h3>
+        <p data-i18n="s8.d">Distribuição regular e contratos à medida da sua empresa.</p>
       </article>
     </div>
   </div>
@@ -833,12 +860,6 @@ footer a:hover{color:#fff}
           </div>
         </div>
 
-        <div class="map" id="map">
-          <div class="load">
-            <b data-i18n="map.t">Onde estamos</b>
-            <button class="btn btn--red btn--sm" id="mapBtn" type="button" data-i18n="map.btn">Carregar mapa</button>
-          </div>
-        </div>
       </div>
 
       <div class="panel" data-rise style="transition-delay:.1s">
@@ -877,6 +898,8 @@ footer a:hover{color:#fff}
               <option data-i18n="s4.t">Entregas e recolhas 24h</option>
               <option data-i18n="s5.t">Serviços a emigrantes</option>
               <option data-i18n="s6.t">Provas desportivas e eventos</option>
+              <option data-i18n="s7.t">Mudanças e móveis</option>
+              <option data-i18n="s8.t">Serviços empresariais</option>
             </select>
             <span class="err" data-i18n="f.err">Campo obrigatório</span>
           </div>
@@ -962,6 +985,13 @@ footer a:hover{color:#fff}
   </div>
 </footer>
 
+<a class="wa-float" href="https://wa.me/351967951060?text=Ol%C3%A1!%20Vim%20pelo%20site%20da%20Rota%2045." target="_blank" rel="noopener" aria-label="Falar connosco no WhatsApp">
+  <svg width="30" height="30" viewBox="0 0 32 32" aria-hidden="true">
+    <path d="M16 3.5C9.1 3.5 3.5 9 3.5 15.8c0 2.3.6 4.4 1.7 6.3L3.5 28.5l6.6-1.7a12.4 12.4 0 005.9 1.5c6.9 0 12.5-5.5 12.5-12.3S22.9 3.5 16 3.5z" fill="none" stroke="#fff" stroke-width="2.2" stroke-linejoin="round"/>
+    <path fill="#fff" d="M11.9 9.6c-.3-.6-.6-.6-.8-.6h-.7c-.3 0-.7.1-1 .5-.4.4-1.3 1.3-1.3 3.2 0 1.9 1.4 3.7 1.5 3.9.2.3 2.6 4.1 6.4 5.6 3.2 1.2 3.8 1 4.5.9.7-.1 2.2-.9 2.5-1.8.3-.9.3-1.6.2-1.8-.1-.2-.3-.3-.7-.5-.4-.2-2.2-1.1-2.5-1.2-.3-.1-.6-.2-.8.2-.2.4-.9 1.2-1.1 1.4-.2.2-.4.3-.8.1-.4-.2-1.5-.6-2.9-1.8-1.1-1-1.8-2.1-2-2.5-.2-.4 0-.6.2-.8l.6-.7c.2-.2.3-.4.4-.6.1-.2.1-.5 0-.7l-1.2-2.9z"/>
+  </svg>
+</a>
+
 <button id="top" aria-label="Voltar ao topo">
   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5M6 11l6-6 6 6"/></svg>
 </button>
@@ -1007,6 +1037,8 @@ var I18N = {
     's4.t':'24h deliveries and pickups','s4.d':'Out of hours and at weekends too.',
     's5.t':'Services for expatriates','s5.d':'Door-to-door moves and shipments.',
     's6.t':'Sports events and competitions','s6.d':'Competition equipment, always on time.',
+    's7.t':'Removals and furniture','s7.d':'Homes and offices, handled piece by piece.',
+    's8.t':'Business services','s8.d':'Regular distribution and contracts built around your business.',
 
     'kick.fleet':'Fleet','fleet.h2':'The right equipment<br>for every load',
     'f1.tag':'Domestic · Europe','f1.t':'Large-volume van',
@@ -1016,7 +1048,6 @@ var I18N = {
     'kick.quote':'Quote','q.h2':'Request a<br>proposal',
     'q.lead':'Tell us what and where.',
     'c.addr':'Address','c.phone':'Mobile · Carlos Silva','c.email':'Email',
-    'map.t':'Where we are','map.btn':'Load map',
 
     'f.name':'Name','f.company':'Company (optional)','f.email':'Email','f.phone':'Phone',
     'f.service':'Service','f.choose':'Select…','f.from':'Origin','f.to':'Destination',
@@ -1136,21 +1167,6 @@ function tickClock(){
 tickClock();
 setInterval(tickClock, 1000);
 document.getElementById('yr').textContent = new Date().getFullYear();
-
-/* ============================================================
-   7. MAP — click to load (no third-party requests until asked)
-   ============================================================ */
-document.getElementById('mapBtn').addEventListener('click', function(){
-  var q = encodeURIComponent('Rua do Mosteiro 3, Cotovios, 2600-860 São João dos Montes, Vila Franca de Xira, Portugal');
-  var f = document.createElement('iframe');
-  f.src = 'https://www.google.com/maps?q=' + q + '&output=embed';
-  f.title = 'Mapa';
-  f.loading = 'lazy';
-  f.referrerPolicy = 'no-referrer-when-downgrade';
-  var map = document.getElementById('map');
-  map.innerHTML = '';
-  map.appendChild(f);
-});
 
 /* ============================================================
    8. FORM — validation + prefilled email and WhatsApp

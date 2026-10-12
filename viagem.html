@@ -55,6 +55,11 @@ p{margin:0}
 .top{max-width:760px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;gap:16px;padding:16px}
 .top img{height:34px;width:auto}
 .top a.tel{font-family:var(--mono);font-size:13px;font-weight:700;letter-spacing:.06em;text-decoration:none}
+/* devices in dark mode darken the page themselves: dark bar + white logo */
+@media (prefers-color-scheme: dark){
+  .topbar{background:var(--ink)}
+  .top a.tel{color:#fff}
+}
 .checker{
   height:6px;opacity:.12;
   background-image:conic-gradient(var(--ink) 90deg,transparent 90deg 180deg,var(--ink) 180deg 270deg,transparent 270deg);
@@ -136,10 +141,15 @@ h1{font-size:clamp(36px,9vw,56px)}
 </head>
 
 <body>
+<div class="topbar">
 <header class="top">
-  <a href="./" aria-label="Rota 45 Transportes"><img src="assets/logo.png" alt="Rota 45 Transportes"></a>
+  <a href="./" aria-label="Rota 45 Transportes"><picture>
+    <source srcset="assets/logo-white.png" media="(prefers-color-scheme: dark)">
+    <img src="assets/logo.png" alt="Rota 45 Transportes">
+  </picture></a>
   <a class="tel" href="tel:+351967951060">+351 967 951 060</a>
 </header>
+</div>
 <div class="checker"></div>
 
 <main class="wrap">
