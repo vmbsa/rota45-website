@@ -14,6 +14,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css">
+<link rel="stylesheet" href="assets/css/live-map.css">
 <link href="https://fonts.googleapis.com/css2?family=Exo+2:ital,wght@0,700;0,800;1,700;1,800;1,900&family=Saira:wght@400;500;600&family=Roboto+Mono:wght@500;700&display=swap" rel="stylesheet">
 
 <style>
@@ -225,75 +226,6 @@ h1 .em::after{
   font-weight:800;font-size:26px;letter-spacing:0;color:var(--ink);
 }
 
-/* live position: map + 3D van, framed like a telemetry screen */
-.live-map{position:relative;aspect-ratio:1/1;background:var(--ink);overflow:hidden;box-shadow:var(--shadow-lg)}
-.lm-canvas{position:absolute;inset:0}
-.lm-canvas canvas{outline:none}
-.lm-fallback{
-  position:absolute;inset:0;transition:opacity .8s var(--ease);
-  background:
-    radial-gradient(circle at 50% 56%,rgba(255,0,25,.35) 0 6px,transparent 7px),
-    radial-gradient(circle at 50% 56%,transparent 0 26px,rgba(255,0,25,.25) 27px 28px,transparent 29px),
-    repeating-linear-gradient(0deg,rgba(255,255,255,.05) 0 1px,transparent 1px 34px),
-    repeating-linear-gradient(90deg,rgba(255,255,255,.05) 0 1px,transparent 1px 34px),
-    var(--ink);
-}
-.live-map.ready .lm-fallback{opacity:0;pointer-events:none}
-.lm-hud{
-  position:absolute;inset:0;pointer-events:none;color:#fff;
-  display:flex;flex-direction:column;justify-content:space-between;padding:22px 24px;
-  background:linear-gradient(to bottom,rgba(11,11,12,.8),transparent 26%,transparent 76%,rgba(11,11,12,.85));
-}
-.lm-hud::before{ /* red corner brackets */
-  content:"";position:absolute;inset:12px;
-  background:
-    linear-gradient(var(--red),var(--red)) left top/18px 2px no-repeat,
-    linear-gradient(var(--red),var(--red)) left top/2px 18px no-repeat,
-    linear-gradient(var(--red),var(--red)) right top/18px 2px no-repeat,
-    linear-gradient(var(--red),var(--red)) right top/2px 18px no-repeat,
-    linear-gradient(var(--red),var(--red)) left bottom/18px 2px no-repeat,
-    linear-gradient(var(--red),var(--red)) left bottom/2px 18px no-repeat;
-}
-.lm-top{display:flex;align-items:flex-start;justify-content:space-between;gap:12px}
-.lm-id{
-  display:grid;gap:6px;font-family:var(--mono);font-size:10.5px;font-weight:700;
-  letter-spacing:.2em;text-transform:uppercase;color:var(--grey-2);
-}
-.lm-clock{
-  font-family:var(--mono);font-weight:700;font-size:22px;line-height:1;
-  letter-spacing:-.01em;font-variant-numeric:tabular-nums;
-}
-.lm-clock small{font-size:.48em;color:var(--grey-2);margin-left:6px;letter-spacing:.12em}
-.lm-coord{font-family:var(--mono);font-size:11.5px;font-weight:700;letter-spacing:.12em;color:#fff}
-.lm-coord span{color:var(--red)}
-.lm-canvas .maplibregl-canvas-container.maplibregl-interactive{cursor:grab}
-.lm-canvas .maplibregl-canvas-container.maplibregl-interactive:active{cursor:grabbing}
-.lm-ctrl{position:absolute;right:20px;top:50%;transform:translateY(-50%);display:grid;gap:6px}
-.lm-ctrl button{
-  width:36px;height:36px;display:grid;place-items:center;padding:0;
-  border:1px solid rgba(255,255,255,.16);border-radius:2px;background:rgba(11,11,12,.78);color:#fff;
-  transition:background .2s,border-color .2s;
-}
-.lm-ctrl button:hover{background:var(--red);border-color:var(--red)}
-.live-map:not(.ready) .lm-ctrl{display:none}
-.live-map .maplibregl-cooperative-gesture-screen{
-  background:rgba(11,11,12,.6);font-family:var(--mono);font-size:12px;font-weight:700;
-  letter-spacing:.14em;text-transform:uppercase;text-align:center;
-}
-.live-map .maplibregl-ctrl-bottom-right .maplibregl-ctrl{margin:0 26px 26px 0}
-.live-map .maplibregl-ctrl-attrib{background:rgba(11,11,12,.7);color:var(--grey-2);font-size:10px}
-.live-map .maplibregl-ctrl-attrib a{color:var(--grey-2)}
-.live-map .maplibregl-ctrl-attrib-button{filter:invert(1);opacity:.6}
-.live{display:inline-flex;align-items:center;gap:7px;color:#fff}
-.live::before{
-  content:"";width:7px;height:7px;border-radius:50%;background:var(--red);
-  box-shadow:0 0 0 0 rgba(255,0,25,.7);animation:pulse 2s infinite;
-}
-@keyframes pulse{
-  70%{box-shadow:0 0 0 9px rgba(255,0,25,0)}
-  100%{box-shadow:0 0 0 0 rgba(255,0,25,0)}
-}
-
 /* speed streaks band */
 .streaks{position:relative;height:84px;background:var(--ink);overflow:hidden}
 .streaks i{
@@ -333,7 +265,7 @@ section{position:relative}
 .sec--ink .kicker b{color:var(--red)}
 .sec--ink .kicker span{color:var(--grey-2)}
 .sec-head{max-width:760px;margin-bottom:52px}
-.sec-head h2{font-size:clamp(32px,4.6vw,56px);line-height:1.15} /* room for the italic Q tail */
+.sec-head h2{font-size:clamp(32px,4.6vw,56px);line-height:1.15;text-wrap:balance} /* room for the italic Q tail */
 
 /* ---------- sobre ---------- */
 .about{display:grid;grid-template-columns:.95fr 1.05fr;gap:clamp(40px,6vw,88px);align-items:center}
@@ -537,17 +469,77 @@ footer a:hover{color:#fff}
 }
 @media (max-width:640px){
   body{font-size:16px}
-  .cards,.fleet,.pillars,.row2{grid-template-columns:1fr}
-  .hero{padding-top:calc(var(--header-h) + 44px)}
-  .eyebrow{flex-wrap:wrap;gap:6px 10px;font-size:11px}
-  .eyebrow span{white-space:nowrap}
-  .eyebrow b{display:none}
-  .hero-meta{display:grid;grid-template-columns:1fr 1fr;gap:18px 22px}
-  .streaks{height:68px}
-  .streaks .word{gap:24px}
-  .panel{padding:22px}
-  .cta .inner{flex-direction:column;align-items:flex-start}
-  .fgrid{grid-template-columns:1fr;gap:32px}
+  .sec{padding:56px 0}
+  .sec-head{margin-bottom:32px}
+  .sec-head h2{font-size:clamp(28px,8.4vw,36px)}
+  .bar{gap:12px}
+  .logo img,header.stuck .logo img{height:32px}
+  .lang button{padding:9px 10px}
+
+  /* hero */
+  .hero{padding-top:calc(var(--header-h) + 36px)}
+  .hero-grid{gap:36px;padding-bottom:48px}
+  .eyebrow{font-size:11px;letter-spacing:.14em;gap:10px;margin-bottom:18px}
+  .eyebrow .slash{width:24px}
+  .eyebrow b,.eyebrow > span:last-child{display:none} /* "desde 2003": the 20+ years figure says it */
+  h1{font-size:clamp(44px,14vw,60px)}
+  .lead{font-size:18px;margin-top:16px;text-wrap:pretty}
+  .hero-cta{display:grid;grid-template-columns:1fr;gap:10px;margin-top:26px}
+  .hero-cta .btn{justify-content:center}
+  .hero-meta{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;margin-top:30px;padding-top:20px}
+  .hero-meta div{font-size:10px;letter-spacing:.08em}
+  .hero-meta b{font-size:22px}
+
+  /* speed band: only the middle words fit */
+  .streaks{height:64px}
+  .streaks .word span:not(:nth-child(2)){display:none}
+
+  /* about */
+  .about{gap:32px}
+  .about-visual{aspect-ratio:4/3}
+  .about-visual .cap{padding:22px}
+  .pillars{grid-template-columns:1fr 1fr;gap:16px 14px;margin-top:28px;padding-top:24px}
+  .pillar{gap:8px}
+  .pillar svg{width:18px;height:18px}
+  .pillar b{font-size:clamp(13px,3.9vw,15px)}
+
+  /* services: compact rows with the icon on the left */
+  .cards{grid-template-columns:1fr;gap:10px}
+  .card{display:grid;grid-template-columns:44px minmax(0,1fr);column-gap:16px;padding:18px}
+  .card-top{grid-row:1 / span 2;margin:0}
+  .card .no{display:none}
+  .card .ico{width:44px;height:44px}
+  .card h3{grid-column:2;font-size:17px;align-self:center}
+  .card p{grid-column:2;margin-top:4px;font-size:14.5px}
+
+  /* fleet: swipe through the photos */
+  .fleet{
+    grid-template-columns:none;grid-auto-flow:column;grid-auto-columns:82%;gap:12px;
+    overflow-x:auto;scroll-snap-type:x mandatory;scroll-padding-inline:var(--pad);
+    margin-inline:calc(-1 * var(--pad));padding:0 var(--pad) 4px;scrollbar-width:none;
+  }
+  .fleet::-webkit-scrollbar{display:none}
+  .rig{scroll-snap-align:start}
+  .rig h3{padding:18px 18px 20px;font-size:18px}
+
+  /* quote + contacts */
+  .quote{gap:32px}
+  .row2{grid-template-columns:1fr}
+  .row2.keep2{grid-template-columns:1fr 1fr}
+  .ci{padding:16px}
+  .map{aspect-ratio:2/1}
+  .panel{padding:22px 18px}
+  .form-actions{display:grid;grid-template-columns:1fr;gap:10px}
+  .form-actions .btn{justify-content:center}
+
+  /* call band + footer */
+  .cta .inner{flex-direction:column;align-items:stretch;gap:20px}
+  .cta .btn{justify-content:center}
+  footer{padding-top:48px}
+  .fgrid{grid-template-columns:1fr;gap:28px;padding-bottom:36px}
+  .fgrid > div:nth-child(2) ul{display:flex;flex-wrap:wrap;gap:8px 20px}
+  .fbot{flex-direction:column;gap:6px}
+  #top{right:14px;bottom:14px;width:44px;height:44px}
 }
 </style>
 </head>
@@ -889,7 +881,7 @@ footer a:hover{color:#fff}
             <span class="err" data-i18n="f.err">Campo obrigatório</span>
           </div>
 
-          <div class="row2">
+          <div class="row2 keep2">
             <div class="field">
               <label for="f-from" data-i18n="f.from">Origem</label>
               <input id="f-from" name="from" type="text">
@@ -1221,356 +1213,17 @@ form.addEventListener('submit', function(e){
 { "imports": { "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js" } }
 </script>
 <script type="module">
-import * as THREE from 'three';
+import { mountLiveMap } from './assets/js/live-map.js';
 
-var VAN = { lng: -9.133111, lat: 38.760731, heading: 0.6 }; /* heading in radians */
-var VIEW = { zoom: 12.2, pitch: 50, bearing: 0 };              /* starting camera, north up */
-var VAN_PX = 64; /* zoomed out, the van keeps about this length on screen; zoomed in it is life size */
-
-var el = document.getElementById('liveMap');
-var card = el.closest('.live-map');
-var still = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
-
-document.getElementById('lmCoord').innerHTML =
-  Math.abs(VAN.lat).toFixed(5) + '° ' + (VAN.lat >= 0 ? 'N' : 'S') + ' <span>/</span> ' +
-  Math.abs(VAN.lng).toFixed(5) + '° ' + (VAN.lng >= 0 ? 'E' : 'W');
-
-function hasWebGL(){
-  try { var c = document.createElement('canvas'); return !!(c.getContext('webgl2') || c.getContext('webgl')); }
-  catch (e){ return false; }
-}
-
-if (window.maplibregl && hasWebGL()){
-  /* the livery is drawn with the site fonts, so wait for them */
-  Promise.all([
-    document.fonts.load("italic 900 100px 'Exo 2'"),
-    document.fonts.load("700 30px 'Roboto Mono'")
-  ]).catch(function(){}).then(start);
-}
-
-function start(){
-  var pt = document.documentElement.lang !== 'en';
-  var map = new maplibregl.Map({
-    container: el,
-    style: 'https://tiles.openfreemap.org/styles/dark',
-    center: [VAN.lng, VAN.lat], zoom: VIEW.zoom, pitch: VIEW.pitch, bearing: VIEW.bearing,
-    minZoom: 8, maxZoom: 20, maxPitch: 70,
-    /* Ctrl + scroll to zoom and two fingers to pan, so the page still scrolls normally */
-    cooperativeGestures: true,
-    locale: pt ? {
-      'CooperativeGesturesHandler.WindowsHelpText': 'Use Ctrl + scroll para aproximar o mapa',
-      'CooperativeGesturesHandler.MacHelpText': 'Use ⌘ + scroll para aproximar o mapa',
-      'CooperativeGesturesHandler.MobileHelpText': 'Use dois dedos para mover o mapa'
-    } : {},
-    attributionControl: false, antialias: true, fadeDuration: 0
-  });
-  map.addControl(new maplibregl.AttributionControl({compact: true}), 'bottom-right');
-  /* the dark style references a wood pattern it doesn't ship; a blank pixel keeps the console quiet */
-  map.on('styleimagemissing', function(e){
-    if (!map.hasImage(e.id)) map.addImage(e.id, {width:1, height:1, data:new Uint8Array(4)});
-  });
-
-  var visible = true;
-  map.on('style.load', function(){
-    restyle(map);
-    map.addLayer(vanLayer(map, function(){ return visible; }));
-  });
-  map.on('load', function(){
-    var a = el.querySelector('.maplibregl-ctrl-attrib');
-    if (a){ a.classList.remove('maplibregl-compact-show'); a.removeAttribute('open'); }
-  });
-  map.once('idle', function(){ card.classList.add('ready'); });
-
-  /* the pulsing ring only animates while the card is on screen */
-  if ('IntersectionObserver' in window){
-    new IntersectionObserver(function(entries){
-      visible = entries[0].isIntersecting;
-      if (visible) map.triggerRepaint();
-    }).observe(card);
-  }
-
-  document.getElementById('lmIn').addEventListener('click', function(){ map.zoomIn(); });
-  document.getElementById('lmOut').addEventListener('click', function(){ map.zoomOut(); });
-  document.getElementById('lmHome').addEventListener('click', function(){
-    map.flyTo({
-      center:[VAN.lng, VAN.lat], zoom:VIEW.zoom, pitch:VIEW.pitch, bearing:VIEW.bearing,
-      duration: still ? 0 : 1200
-    });
-  });
-}
-
-/* darker, cleaner basemap: only place names, visible streets, red motorways, low 3D blocks */
-var KEEP_LABELS = ['place_other', 'place_suburb', 'place_village', 'place_town', 'place_city', 'place_city_large'];
-function restyle(map){
-  map.getStyle().layers.forEach(function(l){
-    if (l.type === 'symbol' && KEEP_LABELS.indexOf(l.id) === -1) map.setLayoutProperty(l.id, 'visibility', 'none');
-  });
-  var paint = {
-    'background':              ['background-color', '#0b0b0c'],
-    'landuse_residential':     ['fill-color', '#111114'],
-    'highway_minor':           ['line-color', '#26262c'],
-    'highway_major_casing':    ['line-color', 'rgba(110,110,120,.5)'],
-    'highway_major_inner':     ['line-color', '#2e2e35'],
-    'highway_major_subtle':    ['line-color', '#2e2e35'],
-    'highway_motorway_casing': ['line-color', 'rgba(255,0,25,.45)'],
-    'highway_motorway_inner':  ['line-color', '#3a0b11'],
-    'highway_motorway_subtle': ['line-color', '#3a0b11']
-  };
-  Object.keys(paint).forEach(function(id){
-    if (map.getLayer(id)) map.setPaintProperty(id, paint[id][0], paint[id][1]);
-  });
-  if (map.getLayer('building')){
-    map.setLayoutProperty('building', 'visibility', 'none');
-    map.addLayer({
-      id:'building-3d', type:'fill-extrusion', source:'openmaptiles', 'source-layer':'building', minzoom:14,
-      paint:{
-        'fill-extrusion-color':'#1e1e24',
-        'fill-extrusion-height':['*', 0.35, ['coalesce', ['get', 'render_height'], 10]],
-        'fill-extrusion-base':0,
-        'fill-extrusion-opacity':0.92
-      }
-    });
-  }
-}
-
-function vanLayer(map, isVisible){
-  var origin = maplibregl.MercatorCoordinate.fromLngLat([VAN.lng, VAN.lat], 0);
-  var metre = origin.meterInMercatorCoordinateUnits();
-  var cosLat = Math.cos(VAN.lat * Math.PI / 180);
-  var yUp = new THREE.Matrix4().makeRotationX(Math.PI / 2);
-  var camera, scene, renderer, ring, vw = 0, vh = 0, t0 = performance.now();
-
-  /* model space is y-up metres; the map is z-up mercator with y pointing south */
-  function modelMatrix(){
-    var metresPerPx = 40075016.686 * cosLat / (512 * Math.pow(2, map.getZoom()));
-    var s = metre * Math.max(1, VAN_PX * metresPerPx / 5.93);
-    return new THREE.Matrix4()
-      .makeTranslation(origin.x, origin.y, origin.z)
-      .scale(new THREE.Vector3(s, -s, s))
-      .multiply(yUp);
-  }
-
-  return {
-    id:'van-3d', type:'custom', renderingMode:'3d',
-    onAdd: function(m, gl){
-      camera = new THREE.Camera();
-      scene = new THREE.Scene();
-      scene.add(new THREE.HemisphereLight(0xffffff, 0x303038, 2.2));
-      var key = new THREE.DirectionalLight(0xffffff, 2.4);
-      key.position.set(4, 10, 6);
-      scene.add(key);
-      var rim = new THREE.DirectionalLight(0xff2a3a, 1.2);
-      rim.position.set(-6, 4, -5);
-      scene.add(rim);
-
-      var van = buildVan();
-      van.rotation.y = VAN.heading;
-      scene.add(van);
-
-      ring = new THREE.Mesh(
-        new THREE.RingGeometry(3.3, 3.6, 64),
-        new THREE.MeshBasicMaterial({color:0xff0019, transparent:true, depthWrite:false})
-      );
-      ring.rotation.x = -Math.PI / 2;
-      ring.position.y = 0.02;
-      scene.add(ring);
-
-      renderer = new THREE.WebGLRenderer({canvas: m.getCanvas(), context: gl, antialias: true});
-      renderer.autoClear = false;
-    },
-    render: function(gl, matrix){
-      var c = map.getCanvas();
-      if (c.width !== vw || c.height !== vh){ vw = c.width; vh = c.height; renderer.setViewport(0, 0, vw, vh); }
-      camera.projectionMatrix = new THREE.Matrix4().fromArray(matrix).multiply(modelMatrix());
-      var t = still ? 0.35 : ((performance.now() - t0) / 1800) % 1;
-      ring.scale.setScalar(1 + t * 1.6);
-      ring.material.opacity = 0.8 * (1 - t);
-      renderer.resetState();
-      renderer.render(scene, camera);
-      if (!still && isVisible()) map.triggerRepaint();
-    }
-  };
-}
-
-/* ---------- the van: Mercedes-Benz Sprinter, high roof, long wheelbase ---------- */
-function buildVan(){
-  var g = new THREE.Group();
-  var R = 2.95, H = 2.62, B = 0.42, BW = 1.9;   /* half length, roof, sill, body width */
-  var FA = 2.05, RA = -2.25, WR = 0.36, ARCH = 0.44;
-  var SIDE = BW / 2 + 0.06;                      /* outer face of the sides (with bevel) */
-
-  function mat(o){ return new THREE.MeshStandardMaterial(o); }
-  var silver = mat({color:0xc9ccd2, metalness:.35, roughness:.4});
-  var dark   = mat({color:0x1a1b1f, roughness:.75});
-  var glass  = mat({color:0x0b0d12, metalness:.5, roughness:.15, side:THREE.DoubleSide});
-  var rubber = mat({color:0x0d0d0f, roughness:.95});
-  var hub    = mat({color:0xa3a8b0, metalness:.7, roughness:.3});
-  var well   = mat({color:0x050506, roughness:1, side:THREE.DoubleSide});
-  var lamp   = mat({color:0xffffff, emissive:0xfff3dc, emissiveIntensity:1.6});
-  var tail   = mat({color:0xff0019, emissive:0xff0019, emissiveIntensity:1.2});
-
-  function add(geo, m, x, y, z){ var o = new THREE.Mesh(geo, m); o.position.set(x || 0, y || 0, z || 0); g.add(o); return o; }
-  function box(w, h, d, m, x, y, z){ return add(new THREE.BoxGeometry(w, h, d), m, x, y, z); }
-
-  /* side profile (x forward, y up) with the wheel arches cut into the sill */
-  var a0 = Math.asin((B - WR) / ARCH), half = Math.cos(a0) * ARCH;
-  var p = new THREE.Shape();
-  p.moveTo(-R, B);
-  p.lineTo(-R, H - 0.1);
-  p.quadraticCurveTo(-R, H, -R + 0.1, H);
-  p.lineTo(1.05, H);
-  p.quadraticCurveTo(1.4, H, 1.55, H - 0.32);
-  p.lineTo(2.2, 1.42);
-  p.quadraticCurveTo(2.35, 1.3, 2.75, 1.2);
-  p.quadraticCurveTo(R, 1.12, R, 0.92);
-  p.lineTo(R, B);
-  p.lineTo(FA + half, B);
-  p.absarc(FA, WR, ARCH, a0, Math.PI - a0, false);
-  p.lineTo(RA + half, B);
-  p.absarc(RA, WR, ARCH, a0, Math.PI - a0, false);
-  p.lineTo(-R, B);
-  var body = new THREE.ExtrudeGeometry(p, {
-    depth:BW, bevelEnabled:true, bevelThickness:.06, bevelSize:.06, bevelSegments:3, curveSegments:16
-  });
-  body.translate(0, 0, -BW / 2);
-  add(body, silver);
-
-  /* windshield, lifted just off the sloped panel */
-  var w1 = new THREE.Vector2(1.55, H - 0.32), w2 = new THREE.Vector2(2.2, 1.42);
-  var d = w2.clone().sub(w1);
-  var n = new THREE.Vector2(-d.y, d.x).normalize().multiplyScalar(0.075);
-  var top = w1.clone().addScaledVector(d, 0.04).add(n), bot = w2.clone().addScaledVector(d, -0.06).add(n);
-  var hw = BW / 2 - 0.05;
-  var ws = new THREE.BufferGeometry().setFromPoints([
-    new THREE.Vector3(top.x, top.y, -hw), new THREE.Vector3(bot.x, bot.y, -hw),
-    new THREE.Vector3(bot.x, bot.y, hw), new THREE.Vector3(top.x, top.y, hw)
-  ]);
-  ws.setIndex([0, 1, 2, 0, 2, 3]);
-  ws.computeVertexNormals();
-  add(ws, glass);
-
-  /* cab door windows */
-  var sw = new THREE.Shape();
-  sw.moveTo(1.25, 1.52); sw.lineTo(2.06, 1.52); sw.lineTo(1.54, 2.24); sw.lineTo(1.25, 2.24); sw.closePath();
-  var swGeo = new THREE.ShapeGeometry(sw);
-  add(swGeo, glass, 0, 0, SIDE + 0.005);
-  add(swGeo, glass, 0, 0, -SIDE - 0.005);
-
-  /* dark sill trim between the arches, bumpers, grille */
-  var TW = SIDE * 2 + 0.02, open = ARCH - 0.06;
-  [[-R - 0.06, RA - open], [RA + open, FA - open], [FA + open, R + 0.06]].forEach(function(s){
-    box(s[1] - s[0], 0.32, TW, dark, (s[0] + s[1]) / 2, B + 0.1, 0);
-  });
-  box(0.16, 0.45, TW, dark, R + 0.02, B + 0.17, 0);
-  box(0.16, 0.3, TW, dark, -R - 0.02, B + 0.1, 0);
-  box(0.04, 0.26, 1.2, dark, R + 0.07, 0.78, 0);
-  var star = add(new THREE.TorusGeometry(0.09, 0.015, 8, 24), hub, R + 0.1, 0.78, 0);
-  star.rotation.y = Math.PI / 2;
-
-  /* lights, mirrors, rear door split */
-  [-1, 1].forEach(function(side){
-    box(0.1, 0.12, 0.36, lamp, R - 0.02, 1.0, side * 0.7);
-    box(0.06, 0.95, 0.12, tail, -R - 0.06, 1.35, side * (SIDE - 0.08));
-    box(0.1, 0.3, 0.2, dark, 1.6, 1.78, side * (SIDE + 0.12));
-  });
-  box(0.01, H - B - 0.4, 0.02, dark, -R - 0.072, (H + B + 0.3) / 2, 0);
-
-  /* wheels and wheel wells */
-  var tyre = new THREE.CylinderGeometry(WR, WR, 0.26, 28); tyre.rotateX(Math.PI / 2);
-  var cap = new THREE.CylinderGeometry(0.2, 0.2, 0.27, 20); cap.rotateX(Math.PI / 2);
-  var liner = new THREE.CylinderGeometry(open, open, BW + 0.1, 24, 1, true, Math.PI / 2, Math.PI);
-  liner.rotateX(Math.PI / 2);
-  [FA, RA].forEach(function(x){
-    add(liner, well, x, WR, 0);
-    [-1, 1].forEach(function(side){
-      var z = side * (SIDE - 0.14);
-      add(tyre, rubber, x, WR, z);
-      add(cap, hub, x, WR, z + side * 0.004);
-    });
-  });
-
-  /* livery: the black pattern at the rear and ROTA45, as on the real van */
-  function decal(tex, w, h){
-    return new THREE.Mesh(new THREE.PlaneGeometry(w, h), mat({
-      map:tex, transparent:true, roughness:.5, metalness:.2,
-      polygonOffset:true, polygonOffsetFactor:-4
-    }));
-  }
-  var right = decal(livery(true), 3.7, 1.7);
-  right.position.set(-1.0, 1.62, SIDE + 0.004);
-  g.add(right);
-  var left = decal(livery(false), 3.7, 1.7);
-  left.position.set(-1.0, 1.62, -SIDE - 0.004);
-  left.rotation.y = Math.PI;
-  g.add(left);
-  var back = decal(rearLivery(), 1.6, 1.5);
-  back.position.set(-R - 0.065, 1.62, 0);
-  back.rotation.y = -Math.PI / 2;
-  g.add(back);
-
-  /* soft contact shadow */
-  var sc = document.createElement('canvas');
-  sc.width = sc.height = 128;
-  var sx = sc.getContext('2d');
-  var grd = sx.createRadialGradient(64, 64, 6, 64, 64, 64);
-  grd.addColorStop(0, 'rgba(0,0,0,.8)');
-  grd.addColorStop(1, 'rgba(0,0,0,0)');
-  sx.fillStyle = grd;
-  sx.fillRect(0, 0, 128, 128);
-  var shadow = add(new THREE.PlaneGeometry(7.6, 3.3),
-    new THREE.MeshBasicMaterial({map:new THREE.CanvasTexture(sc), transparent:true, depthWrite:false}), 0, 0.015, 0);
-  shadow.rotation.x = -Math.PI / 2;
-
-  return g;
-}
-
-function canvasTex(c){
-  var t = new THREE.CanvasTexture(c);
-  t.colorSpace = THREE.SRGBColorSpace;
-  t.anisotropy = 4;
-  return t;
-}
-
-/* side livery; rearLeft says which end of the canvas is the back of the van */
-function livery(rearLeft){
-  var c = document.createElement('canvas');
-  c.width = 1024; c.height = 470;
-  var x = c.getContext('2d');
-  for (var i = 0; i < 30; i++){
-    for (var j = 0; j < 11; j++){
-      var a = 0.9 - (i / 29) * 1.6;
-      if (a <= 0.03) continue;
-      var cx = (rearLeft ? i : 29 - i) * 35 + (j % 2 ? 17 : 0) + 12, cy = j * 42 + 20;
-      x.fillStyle = 'rgba(14,14,16,' + a.toFixed(2) + ')';
-      x.beginPath(); x.moveTo(cx, cy - 12); x.lineTo(cx + 12, cy + 10); x.lineTo(cx - 12, cy + 10); x.closePath();
-      x.fill();
-    }
-  }
-  x.font = "italic 900 170px 'Exo 2', Impact, sans-serif";
-  var a1 = x.measureText('ROTA').width, a2 = x.measureText('45').width, total = a1 + 6 + a2;
-  var sx = rearLeft ? c.width - 60 - total : 60;
-  x.fillStyle = '#0b0b0c'; x.fillText('ROTA', sx, 300);
-  x.fillStyle = '#ff0019'; x.fillText('45', sx + a1 + 6, 300);
-  x.font = "700 30px 'Roboto Mono', monospace";
-  x.fillStyle = '#0b0b0c';
-  x.fillText('TRANSPORTES', sx + 10, 350);
-  x.fillStyle = '#ff0019';
-  x.beginPath(); x.moveTo(0, 424); x.lineTo(c.width, 410); x.lineTo(c.width, 436); x.lineTo(0, 450); x.closePath();
-  x.fill();
-  return canvasTex(c);
-}
-
-function rearLivery(){
-  var c = document.createElement('canvas');
-  c.width = 512; c.height = 480;
-  var x = c.getContext('2d');
-  x.textAlign = 'center';
-  x.font = "italic 900 120px 'Exo 2', Impact, sans-serif";
-  x.fillStyle = '#0b0b0c'; x.fillText('ROTA', 256, 190);
-  x.font = "italic 900 220px 'Exo 2', Impact, sans-serif";
-  x.fillStyle = '#ff0019'; x.fillText('45', 256, 380);
-  return canvasTex(c);
-}
+mountLiveMap({
+  el: document.getElementById('liveMap'),
+  card: document.querySelector('.live-map'),
+  van: { lng: -9.133111, lat: 38.760731, heading: 0.6 }, /* test position; heading in radians */
+  coordEl: document.getElementById('lmCoord'),
+  zoomIn: document.getElementById('lmIn'),
+  zoomOut: document.getElementById('lmOut'),
+  home: document.getElementById('lmHome')
+});
 </script>
 </body>
 </html>

@@ -1,0 +1,559 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Gestão de viagens — Rota 45</title>
+<link rel="icon" type="image/png" href="assets/favicon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Exo+2:ital,wght@1,800;1,900&family=Saira:wght@400;500;600&family=Roboto+Mono:wght@500;700&display=swap" rel="stylesheet">
+
+<style>
+/* ============================================================
+   ROTA 45 — trip management (one column, big buttons)
+   ============================================================ */
+:root{
+  --red:#FF0019;
+  --red-dk:#C4000F;
+  --ink:#0B0B0C;
+  --ink-2:#141418;
+  --ink-3:#1C1C21;
+  --line:rgba(255,255,255,.09);
+  --line-2:rgba(255,255,255,.18);
+  --fg:#FFFFFF;
+  --grey-1:#A3A3AD;
+  --grey-2:#6B6B75;
+  --good:#37D67A;
+
+  --display:'Exo 2','Arial Narrow',Impact,sans-serif;
+  --body:'Saira','Helvetica Neue',Arial,sans-serif;
+  --mono:'Roboto Mono',ui-monospace,'SF Mono',Menlo,monospace;
+  --r:4px;
+}
+
+*,*::before,*::after{box-sizing:border-box}
+html{color-scheme:dark;-webkit-text-size-adjust:100%}
+body{
+  margin:0;background:var(--ink);color:var(--fg);
+  font-family:var(--body);font-size:16px;line-height:1.5;-webkit-font-smoothing:antialiased;
+}
+button,input{font:inherit;color:inherit}
+button{cursor:pointer}
+a{color:inherit}
+:focus-visible{outline:2px solid var(--red);outline-offset:2px}
+h1,h2,h3{font-family:var(--display);font-style:italic;font-weight:800;text-transform:uppercase;line-height:1.05;margin:0}
+p{margin:0}
+[hidden]{display:none !important}
+.label{font-family:var(--mono);font-size:11px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:var(--grey-1)}
+
+/* ---------- top bar (shared with the 3D load page) ---------- */
+.top{display:flex;align-items:center;gap:16px;min-height:64px;padding:8px 24px;flex-wrap:wrap}
+.top img{height:28px;width:auto}
+.nav{display:flex;gap:4px;margin-left:auto}
+.nav a{
+  padding:9px 12px;font-family:var(--display);font-style:italic;font-weight:800;font-size:14px;
+  text-transform:uppercase;letter-spacing:.03em;text-decoration:none;color:var(--grey-1);border-radius:2px;
+}
+.nav a:hover{color:#fff}
+.nav a[aria-current="page"]{color:#fff;box-shadow:inset 0 -3px 0 var(--red)}
+.checker{
+  height:6px;opacity:.14;
+  background-image:conic-gradient(#fff 90deg,transparent 90deg 180deg,#fff 180deg 270deg,transparent 270deg);
+  background-size:12px 12px;
+}
+
+.wrap{max-width:760px;margin:0 auto;padding:24px 16px 56px;display:grid;gap:28px}
+.sec-title{display:flex;align-items:baseline;justify-content:space-between;gap:12px;margin-bottom:12px}
+.sec-title h2{font-size:20px}
+
+/* ---------- buttons ---------- */
+.btn{
+  display:inline-flex;align-items:center;justify-content:center;gap:10px;
+  font-family:var(--display);font-style:italic;font-weight:800;text-transform:uppercase;letter-spacing:.03em;
+  font-size:15px;line-height:1;padding:13px 18px;border:0;border-radius:2px;text-decoration:none;
+  transition:background .2s,box-shadow .2s,color .2s;white-space:nowrap;
+}
+.btn--red{background:var(--red);color:#fff}
+.btn--red:hover{background:var(--red-dk)}
+.btn--ghost{background:transparent;box-shadow:inset 0 0 0 1.5px var(--line-2)}
+.btn--ghost:hover{box-shadow:inset 0 0 0 1.5px #fff}
+.btn--big{width:100%;font-size:20px;padding:20px 22px}
+.btn.armed{background:#fff;color:var(--ink)}
+
+/* ---------- the trip on the road (or the next one) ---------- */
+.now{
+  position:relative;background:var(--ink-2);border:1px solid var(--line);border-top:4px solid var(--red);
+  border-radius:var(--r);padding:22px 22px 24px;display:grid;gap:14px;overflow:hidden;
+}
+.now::after{
+  content:"";position:absolute;right:-30%;top:-60%;width:90%;height:120%;pointer-events:none;
+  background:radial-gradient(closest-side,rgba(255,0,25,.16),transparent 70%);
+}
+.now>*{position:relative}
+.now.idle{border-top-color:var(--line-2)}
+.now.idle::after{display:none}
+.now-top{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:8px}
+.now h3{font-size:clamp(28px,7vw,40px)}
+.route{font-size:19px;font-weight:500}
+.route i{font-style:normal;color:var(--red);padding:0 6px}
+.meta{color:var(--grey-1);font-size:15px}
+.eta{display:flex;flex-wrap:wrap;align-items:baseline;gap:6px 12px;padding:12px 14px;background:var(--ink);border-left:3px solid var(--red)}
+.eta b{font-family:var(--display);font-style:italic;font-weight:800;text-transform:uppercase;font-size:18px}
+.links{display:flex;flex-wrap:wrap;gap:10px}
+.links .btn{flex:1 1 160px}
+
+.live{display:inline-flex;align-items:center;gap:8px;font-family:var(--mono);font-size:12px;font-weight:700;letter-spacing:.18em;text-transform:uppercase}
+.live::before{
+  content:"";width:8px;height:8px;border-radius:50%;background:var(--red);
+  box-shadow:0 0 0 0 rgba(255,0,25,.7);animation:pulse 2s infinite;
+}
+@keyframes pulse{70%{box-shadow:0 0 0 9px rgba(255,0,25,0)}100%{box-shadow:0 0 0 0 rgba(255,0,25,0)}}
+
+/* ---------- queue ---------- */
+.queue{list-style:none;margin:0;padding:0;display:grid;gap:8px}
+.trip{
+  display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:14px;align-items:center;
+  background:var(--ink-2);border:1px solid var(--line);border-radius:var(--r);padding:14px 14px 14px 16px;
+}
+.num{
+  font-family:var(--display);font-style:italic;font-weight:900;font-size:22px;line-height:1;
+  min-width:38px;text-align:center;padding:6px 6px 7px;background:var(--ink-3);transform:skewX(-10deg);
+}
+.trip:first-child .num{background:var(--red)}
+.trip b{display:block;font-weight:600;font-size:17px}
+.trip .sub{display:block;color:var(--grey-1);font-size:14px}
+.acts{display:flex;gap:6px}
+.icon{
+  width:40px;height:40px;display:grid;place-items:center;padding:0;border:1px solid var(--line-2);
+  background:transparent;border-radius:2px;color:#fff;text-decoration:none;
+}
+.icon:hover{border-color:#fff}
+.icon[disabled]{opacity:.3;cursor:default}
+.icon.armed{background:#fff;color:var(--ink);border-color:#fff}
+.empty{color:var(--grey-1);padding:18px;border:1px dashed var(--line-2);border-radius:var(--r);text-align:center}
+
+/* ---------- new trip form ---------- */
+.form{background:var(--ink-2);border:1px solid var(--line);border-radius:var(--r);padding:20px;display:grid;gap:16px}
+.form h3{font-size:20px}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.f{display:grid;gap:6px}
+.f span{font-family:var(--mono);font-size:11px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--grey-1)}
+.f input{
+  width:100%;padding:13px 14px;background:var(--ink);border:1.5px solid var(--line-2);border-radius:2px;font-size:17px;
+}
+.f input:focus{outline:0;border-color:var(--red)}
+.f input.bad{border-color:var(--red);background:rgba(255,0,25,.08)}
+.vols{display:grid;gap:8px}
+.vrow{display:grid;grid-template-columns:repeat(5,minmax(0,1fr)) 40px;gap:8px;align-items:end}
+.vrow .f input{padding:10px 8px;text-align:center;font-size:16px;-moz-appearance:textfield;appearance:textfield}
+.vrow .f input::-webkit-outer-spin-button,.vrow .f input::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
+.vrow .f span{font-size:10px;letter-spacing:.08em}
+.form-actions{display:flex;flex-wrap:wrap;gap:10px}
+.form-actions .btn{flex:1 1 180px}
+
+/* ---------- done ---------- */
+details.done{background:var(--ink-2);border:1px solid var(--line);border-radius:var(--r);padding:16px 18px}
+details.done summary{cursor:pointer;font-family:var(--display);font-style:italic;font-weight:800;text-transform:uppercase;font-size:18px}
+.done ul{list-style:none;margin:14px 0 0;padding:0;display:grid;gap:10px}
+.done li{display:flex;flex-wrap:wrap;justify-content:space-between;gap:4px 12px;padding-top:10px;border-top:1px solid var(--line)}
+.done li span{color:var(--grey-1);font-size:14px}
+.ok{color:var(--good)}
+
+.note{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px;color:var(--grey-2);font-size:13.5px}
+.linkbtn{border:0;background:none;padding:0;font-family:var(--mono);font-size:11px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--grey-1);text-decoration:underline}
+.linkbtn:hover{color:#fff}
+
+/* ---------- password gate ---------- */
+.gate{min-height:100vh;display:grid;place-items:center;padding:24px 16px}
+.gate-card{width:100%;max-width:380px;display:grid;gap:18px}
+.gate-card img{height:32px;width:auto}
+.gate-card h1{font-size:28px}
+.gate-err{min-height:1.5em;color:#ff6b78;font-size:14.5px}
+.nav button{
+  padding:9px 12px;border:0;background:none;font-family:var(--display);font-style:italic;font-weight:800;
+  font-size:14px;text-transform:uppercase;letter-spacing:.03em;color:var(--grey-1);
+}
+.nav button:hover{color:#fff}
+
+.toast{
+  position:fixed;left:50%;bottom:24px;transform:translateX(-50%);z-index:20;
+  background:#fff;color:var(--ink);padding:12px 18px;border-radius:2px;font-weight:600;
+}
+
+@media (prefers-reduced-motion:reduce){ .live::before{animation:none} }
+@media (max-width:560px){
+  .top{padding:8px 16px}
+  .nav{margin-left:0;width:100%}
+  .trip{grid-template-columns:auto minmax(0,1fr)}
+  .acts{grid-column:1 / -1;justify-content:flex-end}
+  .row2{grid-template-columns:1fr}
+  .vrow{grid-template-columns:repeat(3,minmax(0,1fr))}
+  .vrow .del{grid-column:3}
+}
+</style>
+</head>
+
+<body>
+<div class="gate" id="gate">
+  <form class="gate-card" id="gateForm" novalidate>
+    <img src="assets/logo-white.png" alt="Rota 45 Transportes">
+    <h1>Área reservada</h1>
+    <label class="f"><span>Palavra-passe</span><input type="password" id="gatePw" autocomplete="current-password"></label>
+    <button type="submit" class="btn btn--red btn--big" id="gateBtn">Entrar</button>
+    <p class="gate-err" id="gateErr" role="alert"></p>
+  </form>
+</div>
+
+<div id="app" hidden>
+<header class="top">
+  <img src="assets/logo-white.png" alt="Rota 45 Transportes">
+  <nav class="nav" aria-label="Gestão">
+    <a href="gestao-qwcjxzjv.html" aria-current="page">Viagens</a>
+    <a href="./">Site</a>
+    <button type="button" id="logout">Sair</button>
+  </nav>
+</header>
+<div class="checker"></div>
+
+<main class="wrap">
+  <section aria-labelledby="nowTitle">
+    <div class="sec-title"><h2 id="nowTitle">Agora</h2></div>
+    <div id="now"></div>
+  </section>
+
+  <section aria-labelledby="queueTitle">
+    <div class="sec-title"><h2 id="queueTitle">Próximas viagens</h2><span class="label" id="queueCount"></span></div>
+    <ol class="queue" id="queue"></ol>
+  </section>
+
+  <section>
+    <button type="button" class="btn btn--ghost btn--big" id="newBtn">+ Nova viagem</button>
+    <form class="form" id="newForm" novalidate hidden>
+      <h3>Nova viagem</h3>
+      <label class="f"><span>Nome do cliente</span><input type="text" id="n-client" autocomplete="off" maxlength="80"></label>
+      <label class="f"><span>Telemóvel (para o WhatsApp)</span><input type="tel" id="n-phone" autocomplete="off" maxlength="30"></label>
+      <div class="row2">
+        <label class="f"><span>Origem</span><input type="text" id="n-from" maxlength="80"></label>
+        <label class="f"><span>Destino</span><input type="text" id="n-to" maxlength="80"></label>
+      </div>
+      <div class="vols">
+        <span class="label">Volumes (opcional)</span>
+        <div id="vrows"></div>
+        <button type="button" class="btn btn--ghost" id="addVol">+ Volume</button>
+      </div>
+      <div class="form-actions">
+        <button type="submit" class="btn btn--red">Guardar viagem</button>
+        <button type="button" class="btn btn--ghost" id="cancelNew">Cancelar</button>
+      </div>
+    </form>
+  </section>
+
+  <details class="done" id="done">
+    <summary>Concluídas <span id="doneCount"></span></summary>
+    <ul id="doneList"></ul>
+  </details>
+
+  <p class="note">
+    <span>Protótipo: as viagens ficam guardadas só neste navegador.</span>
+    <button type="button" class="linkbtn" id="reset">Repor exemplo</button>
+  </p>
+</main>
+</div>
+
+<script type="module">
+import * as T from './assets/js/trips.js';
+import { tripEta, estimate, formatArrival, formatKm } from './assets/js/route.js';
+
+/* ---------- helpers ---------- */
+function esc(s){
+  return String(s == null ? '' : s).replace(/[&<>"']/g, function(c){
+    return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];
+  });
+}
+function fmt(n, d){ return Number(n).toLocaleString('pt-PT', {minimumFractionDigits:d || 0, maximumFractionDigits:d || 0}); }
+function hhmm(ts){ return new Date(ts).toLocaleTimeString('pt-PT', {hour:'2-digit', minute:'2-digit'}); }
+function dayTime(ts){ return new Date(ts).toLocaleDateString('pt-PT', {day:'2-digit', month:'2-digit'}) + ' às ' + hhmm(ts); }
+function since(ts){
+  var m = Math.max(0, Math.round((Date.now() - ts) / 60000));
+  if (m < 60) return 'há ' + m + ' min';
+  var h = Math.floor(m / 60);
+  return 'há ' + h + ' h' + (m % 60 ? ' ' + (m % 60) + ' min' : '');
+}
+function route(t){
+  if (!t.from && !t.to) return '';
+  return esc(t.from || '?') + '<i>→</i>' + esc(t.to || '?');
+}
+function summary(t){
+  var s = T.totals(t);
+  if (!s.n) return 'Sem volumes indicados';
+  return s.n + (s.n === 1 ? ' volume' : ' volumes') + ' · ' + fmt(s.m3, 2) + ' m³ · ' + fmt(s.kg) + ' kg';
+}
+function toast(msg){
+  var el = document.createElement('div');
+  el.className = 'toast';
+  el.setAttribute('role', 'status');
+  el.textContent = msg;
+  document.body.appendChild(el);
+  setTimeout(function(){ el.remove(); }, 2200);
+}
+
+var ICON = {
+  wa:'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 12a8 8 0 01-11.8 7L4 20l1.1-4A8 8 0 1120 12z"/></svg>',
+  link:'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 14a4 4 0 005.7 0l3-3a4 4 0 00-5.7-5.7l-1 1"/><path d="M14 10a4 4 0 00-5.7 0l-3 3a4 4 0 005.7 5.7l1-1"/></svg>',
+  up:'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 15l6-6 6 6"/></svg>',
+  down:'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>',
+  del:'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>'
+};
+
+function linkButtons(t){
+  return '<div class="links">'
+    + '<a class="btn btn--ghost" href="' + esc(T.whatsappUrl(t)) + '" target="_blank" rel="noopener">' + ICON.wa + 'Enviar link</a>'
+    + '<button type="button" class="btn btn--ghost" data-act="copy" data-id="' + t.id + '">' + ICON.link + 'Copiar link</button>'
+    + '<a class="btn btn--ghost" href="' + esc(T.tripUrl(t)) + '" target="_blank" rel="noopener">Ver como o cliente</a>'
+    + '</div>';
+}
+
+/* ---------- render ---------- */
+function render(){
+  var trips = T.getTrips(), c = T.current(trips), q = T.queue(trips), d = T.finished(trips);
+
+  var now;
+  if (c){
+    now = '<article class="now">'
+      + '<div class="now-top"><span class="live">Em viagem</span><span class="label">desde ' + hhmm(c.startedAt) + ' · ' + since(c.startedAt) + '</span></div>'
+      + '<h3>' + esc(c.client) + '</h3>'
+      + (route(c) ? '<p class="route">' + route(c) + '</p>' : '')
+      + '<p class="meta">' + summary(c) + '</p>'
+      + (c.to ? '<p class="eta" id="nowEta"><span class="label">Chegada prevista</span><b>a calcular…</b></p>' : '')
+      + '<button type="button" class="btn btn--red btn--big" data-act="finish" data-label="Terminar viagem">Terminar viagem</button>'
+      + linkButtons(c)
+      + '</article>';
+  } else if (q.length){
+    var n = q[0];
+    now = '<article class="now idle">'
+      + '<div class="now-top"><span class="label">Nenhuma viagem em curso · a seguir</span></div>'
+      + '<h3>' + esc(n.client) + '</h3>'
+      + (route(n) ? '<p class="route">' + route(n) + '</p>' : '')
+      + '<p class="meta">' + summary(n) + '</p>'
+      + '<button type="button" class="btn btn--red btn--big" data-act="start">Iniciar viagem</button>'
+      + linkButtons(n)
+      + '</article>';
+  } else {
+    now = '<p class="empty">Sem viagens agendadas. Crie uma nova viagem abaixo.</p>';
+  }
+  document.getElementById('now').innerHTML = now;
+  if (c && c.to){
+    tripEta(c, T.VAN_POSITION).then(function(d){
+      var el = document.getElementById('nowEta');
+      if (!el) return;
+      el.querySelector('b').textContent = d
+        ? formatArrival(estimate(d.route).arrive) + ' · faltam ' + formatKm(d.route.distance)
+        : 'sem previsão para este destino';
+    });
+  }
+
+  document.getElementById('queueCount').textContent = q.length ? q.length + (q.length === 1 ? ' viagem' : ' viagens') : '';
+  document.getElementById('queue').innerHTML = q.length ? q.map(function(t, i){
+    return '<li class="trip" data-id="' + t.id + '">'
+      + '<span class="num">' + (i + 1) + '</span>'
+      + '<div><b>' + esc(t.client) + '</b><span class="sub">' + (route(t) ? route(t).replace('<i>→</i>', ' → ') + ' · ' : '') + summary(t) + '</span></div>'
+      + '<div class="acts">'
+      + '<a class="icon" href="' + esc(T.whatsappUrl(t)) + '" target="_blank" rel="noopener" title="Enviar link por WhatsApp" aria-label="Enviar link a ' + esc(t.client) + ' por WhatsApp">' + ICON.wa + '</a>'
+      + '<button type="button" class="icon" data-act="copy" data-id="' + t.id + '" title="Copiar link" aria-label="Copiar link de ' + esc(t.client) + '">' + ICON.link + '</button>'
+      + '<button type="button" class="icon" data-act="up" title="Subir" aria-label="Subir na fila"' + (i === 0 ? ' disabled' : '') + '>' + ICON.up + '</button>'
+      + '<button type="button" class="icon" data-act="down" title="Descer" aria-label="Descer na fila"' + (i === q.length - 1 ? ' disabled' : '') + '>' + ICON.down + '</button>'
+      + '<button type="button" class="icon" data-act="remove" title="Remover" aria-label="Remover viagem de ' + esc(t.client) + '">' + ICON.del + '</button>'
+      + '</div></li>';
+  }).join('') : '<li class="empty">Nada na fila.</li>';
+
+  document.getElementById('doneCount').textContent = '(' + d.length + ')';
+  document.getElementById('doneList').innerHTML = d.length ? d.map(function(t){
+    return '<li><b>' + esc(t.client) + '</b><span>' + (route(t) ? route(t).replace('<i>→</i>', ' → ') + ' · ' : '')
+      + '<span class="ok">entregue</span> ' + dayTime(t.finishedAt) + '</span></li>';
+  }).join('') : '<li><span>Ainda não há viagens concluídas.</span></li>';
+}
+
+/* ---------- actions ---------- */
+function arm(btn, text, fn){
+  if (btn.classList.contains('armed')){ fn(); return; }
+  var old = btn.innerHTML;
+  btn.classList.add('armed');
+  btn.textContent = text;
+  setTimeout(function(){
+    if (!btn.isConnected) return;
+    btn.classList.remove('armed');
+    btn.innerHTML = old;
+  }, 4000);
+}
+
+function copy(url){
+  function done(){ toast('Link copiado'); }
+  if (navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(url).then(done, fallback);
+  } else fallback();
+  function fallback(){
+    var ta = document.createElement('textarea');
+    ta.value = url;
+    document.body.appendChild(ta);
+    ta.select();
+    try { document.execCommand('copy'); done(); } catch (e){ toast('Não foi possível copiar'); }
+    ta.remove();
+  }
+}
+
+document.addEventListener('click', function(e){
+  var btn = e.target.closest('[data-act]');
+  if (!btn) return;
+  var act = btn.dataset.act;
+  var id = btn.dataset.id || (btn.closest('.trip') && btn.closest('.trip').dataset.id);
+
+  if (act === 'start'){
+    var t = T.startNext();
+    if (t) toast('Viagem de ' + t.client + ' iniciada');
+  } else if (act === 'finish'){
+    arm(btn, 'Toque de novo para confirmar', function(){
+      var t = T.finishCurrent();
+      if (t) toast('Viagem de ' + t.client + ' terminada');
+    });
+  } else if (act === 'copy'){
+    var trip = T.getTrip(id);
+    if (trip) copy(T.tripUrl(trip));
+  } else if (act === 'up' || act === 'down'){
+    T.moveTrip(id, act === 'up' ? -1 : 1);
+  } else if (act === 'remove'){
+    arm(btn, '?', function(){ T.removeTrip(id); toast('Viagem removida'); });
+  }
+});
+
+/* ---------- new trip form ---------- */
+var form = document.getElementById('newForm');
+var newBtn = document.getElementById('newBtn');
+var vrows = document.getElementById('vrows');
+
+function addVolRow(){
+  var row = document.createElement('div');
+  row.className = 'vrow';
+  row.innerHTML = [['l','Comp. cm'],['w','Larg. cm'],['h','Alt. cm'],['kg','Peso kg'],['qty','Qtd.']].map(function(f){
+    return '<label class="f"><span>' + f[1] + '</span><input type="number" inputmode="decimal" min="' + (f[0] === 'kg' ? 0 : 1)
+      + '" step="any" data-k="' + f[0] + '"' + (f[0] === 'qty' ? ' value="1"' : '') + '></label>';
+  }).join('') + '<button type="button" class="icon del" aria-label="Remover volume">' + ICON.del + '</button>';
+  row.querySelector('.del').addEventListener('click', function(){ row.remove(); });
+  vrows.appendChild(row);
+}
+
+newBtn.addEventListener('click', function(){
+  form.hidden = false;
+  newBtn.hidden = true;
+  if (!vrows.children.length) addVolRow();
+  document.getElementById('n-client').focus();
+});
+document.getElementById('cancelNew').addEventListener('click', function(){
+  form.reset();
+  vrows.innerHTML = '';
+  form.hidden = true;
+  newBtn.hidden = false;
+});
+document.getElementById('addVol').addEventListener('click', addVolRow);
+form.addEventListener('input', function(e){ e.target.classList.remove('bad'); });
+
+form.addEventListener('submit', function(e){
+  e.preventDefault();
+  var name = document.getElementById('n-client');
+  var ok = !!name.value.trim();
+  name.classList.toggle('bad', !ok);
+
+  var packages = [];
+  Array.prototype.forEach.call(vrows.children, function(row){
+    function v(k){ var el = row.querySelector('[data-k="' + k + '"]'); return {el:el, n:parseFloat(String(el.value).replace(',', '.'))}; }
+    var l = v('l'), w = v('w'), h = v('h'), kg = v('kg'), q = v('qty');
+    var blank = !l.el.value && !w.el.value && !h.el.value;
+    if (blank) return;
+    var rowOk = true;
+    [l, w, h].forEach(function(x){ var bad = !(x.n > 0); x.el.classList.toggle('bad', bad); if (bad) rowOk = false; });
+    if (!rowOk){ ok = false; return; }
+    packages.push({desc:'Volume', l:l.n, w:w.n, h:h.n, kg:kg.n > 0 ? kg.n : 0, qty:Math.max(1, Math.round(q.n) || 1), fragile:false});
+  });
+  if (!ok){ (form.querySelector('.bad') || name).focus(); return; }
+
+  var t = T.addTrip({
+    client:name.value.trim(),
+    phone:document.getElementById('n-phone').value.trim(),
+    from:document.getElementById('n-from').value.trim(),
+    to:document.getElementById('n-to').value.trim(),
+    packages:packages
+  });
+  form.reset();
+  vrows.innerHTML = '';
+  form.hidden = true;
+  newBtn.hidden = false;
+  toast('Viagem de ' + t.client + ' guardada');
+});
+
+document.getElementById('reset').addEventListener('click', function(e){
+  arm(e.target, 'Toque de novo para repor', function(){ T.resetExample(); toast('Exemplo reposto'); });
+});
+
+/* ---------- password gate ----------
+   Checked in the browser against a PBKDF2 hash: enough to keep visitors out of
+   a page with example data. Real client data will need a server-side login. */
+var GATE = {salt:'f136da66ba741ea9a78ea8283fb6f41a', hash:'1e05a44e037a3104005f013bf0bce96147e3aac07c856f36c8bdb79598345493', iterations:210000};
+var GATE_KEY = 'r45-gestao';
+
+function hexBytes(hex){ return new Uint8Array(hex.match(/../g).map(function(h){ return parseInt(h, 16); })); }
+function toHex(buf){ return Array.from(new Uint8Array(buf), function(b){ return b.toString(16).padStart(2, '0'); }).join(''); }
+
+function derive(pw){
+  return crypto.subtle.importKey('raw', new TextEncoder().encode(pw), 'PBKDF2', false, ['deriveBits'])
+    .then(function(key){
+      return crypto.subtle.deriveBits({name:'PBKDF2', hash:'SHA-256', salt:hexBytes(GATE.salt), iterations:GATE.iterations}, key, 256);
+    })
+    .then(toHex);
+}
+
+function remembered(){
+  try { return localStorage.getItem(GATE_KEY) === GATE.hash; } catch (e){ return false; }
+}
+
+var booted = false;
+function unlock(){
+  document.getElementById('gate').hidden = true;
+  document.getElementById('app').hidden = false;
+  if (booted) return;
+  booted = true;
+  T.subscribe(render);
+  render();
+  setInterval(render, 60000); /* keeps "há X min" current */
+}
+
+document.getElementById('gateForm').addEventListener('submit', function(e){
+  e.preventDefault();
+  var pw = document.getElementById('gatePw'), err = document.getElementById('gateErr'), btn = document.getElementById('gateBtn');
+  err.textContent = '';
+  if (!pw.value){ err.textContent = 'Escreva a palavra-passe.'; pw.focus(); return; }
+  btn.disabled = true;
+  derive(pw.value).then(function(h){
+    btn.disabled = false;
+    if (h !== GATE.hash){ err.textContent = 'Palavra-passe errada.'; pw.select(); return; }
+    try { localStorage.setItem(GATE_KEY, h); } catch (e2){}
+    pw.value = '';
+    unlock();
+  }).catch(function(){
+    btn.disabled = false;
+    err.textContent = 'Este navegador não consegue verificar a palavra-passe.';
+  });
+});
+
+document.getElementById('logout').addEventListener('click', function(){
+  try { localStorage.removeItem(GATE_KEY); } catch (e){}
+  document.getElementById('app').hidden = true;
+  document.getElementById('gate').hidden = false;
+  document.getElementById('gatePw').focus();
+});
+
+if (remembered()) unlock();
+else document.getElementById('gatePw').focus();
+</script>
+</body>
+</html>
