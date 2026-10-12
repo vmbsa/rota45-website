@@ -6,7 +6,9 @@
    ============================================================ */
 import * as THREE from 'three';
 
-var VAN_PX = 64; /* zoomed out, the van keeps about this length on screen; zoomed in it is life size */
+/* zoomed out, the van keeps about this length on screen (smaller on narrow phone maps);
+   zoomed in it is life size */
+var VAN_PX = 64, VAN_PX_NARROW = 36, NARROW = 520;
 var DEFAULT_VIEW = { zoom: 12.2, pitch: 50, bearing: 0 }; /* north up */
 var still = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
 
@@ -58,7 +60,9 @@ function start(opts, VAN, VIEW){
   var visible = true;
   map.on('style.load', function(){
     restyle(map);
-    map.addLayer(vanLayer(map, VAN, function(){ return visible; }));
+    map.addLayer(vanLayer(map, VAN, function(){ return visible; }, function(){
+      return el.clientWidth < NARROW ? VAN_PX_NARROW : VAN_PX;
+    }));
   });
   map.on('load', function(){
     var a = el.querySelector('.maplibregl-ctrl-attrib');
@@ -157,7 +161,7 @@ function restyle(map){
   }
 }
 
-function vanLayer(map, VAN, isVisible){
+function vanLayer(map, VAN, isVisible, vanPx){
   var origin = maplibregl.MercatorCoordinate.fromLngLat([VAN.lng, VAN.lat], 0);
   var metre = origin.meterInMercatorCoordinateUnits();
   var cosLat = Math.cos(VAN.lat * Math.PI / 180);
@@ -167,7 +171,7 @@ function vanLayer(map, VAN, isVisible){
   /* model space is y-up metres; the map is z-up mercator with y pointing south */
   function modelMatrix(){
     var metresPerPx = 40075016.686 * cosLat / (512 * Math.pow(2, map.getZoom()));
-    var s = metre * Math.max(1, VAN_PX * metresPerPx / 5.93);
+    var s = metre * Math.max(1, vanPx() * metresPerPx / 5.93);
     return new THREE.Matrix4()
       .makeTranslation(origin.x, origin.y, origin.z)
       .scale(new THREE.Vector3(s, -s, s))
