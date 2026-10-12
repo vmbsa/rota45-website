@@ -1044,7 +1044,7 @@ var i18nNodes = document.querySelectorAll('[data-i18n]');
 /* snapshot the original PT markup so we can switch back */
 i18nNodes.forEach(function(n){ I18N.pt[n.dataset.i18n] = n.innerHTML; });
 
-function setLang(lang){
+function setLang(lang, remember){
   var dict = I18N[lang] || {};
   i18nNodes.forEach(function(n){
     var v = dict[n.dataset.i18n];
@@ -1056,17 +1056,16 @@ function setLang(lang){
     ? 'Rota 45 Transportes — Always on time'
     : 'Rota 45 Transportes — Sempre a horas';
   langButtons.forEach(function(b){ b.setAttribute('aria-pressed', String(b.dataset.lang === lang)); });
-  try { localStorage.setItem('r45lang', lang); } catch(e){}
+  if (remember){ try { localStorage.setItem('r45-lang', lang); } catch(e){} }
 }
 langButtons.forEach(function(b){
-  b.addEventListener('click', function(){ setLang(b.dataset.lang); });
+  b.addEventListener('click', function(){ setLang(b.dataset.lang, true); });
 });
-/* restore preference, otherwise follow the browser */
+/* Portuguese by default; English only if the visitor picked it before */
 (function(){
   var saved = null;
-  try { saved = localStorage.getItem('r45lang'); } catch(e){}
-  var initial = saved || ((navigator.language || 'pt').toLowerCase().indexOf('pt') === 0 ? 'pt' : 'en');
-  if (initial === 'en') setLang('en');
+  try { saved = localStorage.getItem('r45-lang'); } catch(e){}
+  if (saved === 'en') setLang('en');
 })();
 
 /* ============================================================
