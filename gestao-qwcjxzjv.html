@@ -498,7 +498,7 @@ document.getElementById('reset').addEventListener('click', function(e){
 /* ---------- password gate ----------
    Checked in the browser against a PBKDF2 hash: enough to keep visitors out of
    a page with example data. Real client data will need a server-side login. */
-var GATE = {salt:'f136da66ba741ea9a78ea8283fb6f41a', hash:'1e05a44e037a3104005f013bf0bce96147e3aac07c856f36c8bdb79598345493', iterations:210000};
+var GATE = {salt:'186b78bf855a29c15039dd64f18aa4a6', hash:'6cc26a954eda33e0cf94d6b7650ae7640f6f403a367824873d1b32b2c14f8138', iterations:210000};
 var GATE_KEY = 'r45-gestao';
 
 function hexBytes(hex){ return new Uint8Array(hex.match(/../g).map(function(h){ return parseInt(h, 16); })); }
