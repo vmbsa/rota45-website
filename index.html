@@ -492,6 +492,7 @@ footer a:hover{color:#fff}
 #intro{display:none}
 .intro-on,.intro-on body{overflow:hidden}
 .intro-on #intro{display:block;position:fixed;inset:0;z-index:300;overflow:hidden;pointer-events:none}
+#intro{--t:1;--lane:clamp(24px,4.4vw,60px)}  /* ?slow=N raises --t, to watch it frame by frame */
 
 /* two halves of a livery cut; they overlap, so the screen stays covered */
 #intro .pane{
@@ -504,28 +505,53 @@ footer a:hover{color:#fff}
 }
 /* the strips sit at 8% and 92% of the screen; as a share of a pane 74% tall they are
    (8+16)/74 and (92-42)/74, so the skew never carries them out of frame */
-#intro .pane.top{top:-16%;animation:introTop .86s cubic-bezier(.52,0,.2,1) 1.2s both}
+#intro .pane.top{top:-16%;animation:introTop calc(.82s*var(--t)) cubic-bezier(.24,0,.2,1) calc(1.12s*var(--t)) both}
 #intro .pane.top::after{top:32.4%}
-#intro .pane.bot{bottom:-16%;animation:introBot .86s cubic-bezier(.52,0,.2,1) 1.2s both}
+#intro .pane.bot{bottom:-16%;animation:introBot calc(.82s*var(--t)) cubic-bezier(.24,0,.2,1) calc(1.12s*var(--t)) both}
 #intro .pane.bot::after{top:67.6%}
 @keyframes introTop{to{transform:skewY(-3deg) translateY(-118%)}}
 @keyframes introBot{to{transform:skewY(-3deg) translateY(118%)}}
 
-/* the red cut down the middle, drawn just before the halves part */
-#intro .split{
-  position:absolute;left:-10%;top:50%;width:120%;height:3px;margin-top:-2px;
-  background:linear-gradient(90deg,var(--red-dk),var(--red));
-  transform-origin:left center;animation:introSplit 1.05s var(--ease) .7s both;
+/* two cars cross the screen and their tail lights draw the line that opens it.
+   The outer element carries the run across, the inner one the drift and the tilt:
+   two plain animations compose into a curve, with no path to size per viewport. */
+/* Three of them, same way, three lanes. Each runs dead level, so the trail lies
+   exactly along the path — turning the heading as they went made the streak point
+   one way while the car went another. Nobody changes lane: the one that starts last
+   is simply the quickest, and goes by the other two on its own line. */
+/* Three of them, same way, three lanes, all drawn alike — the site is graphic, not
+   photographic, so nothing here pretends to be a photo. They run dead level, so each
+   trail lies exactly along its own path. Nobody changes lane: the one that starts
+   last is simply the quickest. The lanes are even either side of the middle, and the
+   quick one holds the middle — the very line the page then opens along. */
+#intro .car{position:absolute;left:0;top:50%;width:0;height:0}
+#intro .car.a{transform:translateY(calc(var(--lane) * -1.15))}
+#intro .car.b{transform:translateY(calc(var(--lane) * 1.15))}
+#intro .car.c{transform:translateY(0)}
+#intro .car > i{position:absolute;left:0;top:0;display:block;width:0;height:0}
+#intro .car b{ /* one tail light, smeared into a trail by the speed */
+  position:absolute;right:0;width:clamp(260px,44vw,760px);height:4px;border-radius:4px;
+  background:linear-gradient(90deg,rgba(255,0,25,0),rgba(255,0,25,.22) 38%,
+    rgba(255,10,35,.78) 79%,rgba(255,70,90,1) 94%,#fff);
+  filter:drop-shadow(0 0 10px rgba(255,0,25,.85)) drop-shadow(0 0 28px rgba(255,0,25,.45));
 }
-@keyframes introSplit{
-  0%{transform:skewY(-3deg) scaleX(0);opacity:1}
-  44%{transform:skewY(-3deg) scaleX(1);opacity:1}
-  100%{transform:skewY(-3deg) scaleX(1);opacity:0}
+#intro .car b:first-child{top:-7px}
+#intro .car b:last-child{top:4px}
+/* One run for all three: the gaps come only from how long each one takes. Those three
+   numbers are chosen, not guessed — the quick one takes the near car a third of the
+   way across and the leader two thirds, and is gone by the time the halves part. */
+#intro .car.a > i{animation:carRun calc(.88s*var(--t)) linear calc(.34s*var(--t)) both}
+#intro .car.b > i{animation:carRun calc(.8s*var(--t)) linear calc(.42s*var(--t)) both}
+#intro .car.c > i{animation:carRun calc(.6s*var(--t)) linear calc(.5s*var(--t)) both}
+@keyframes carRun{
+  0%{transform:translateX(-42vw);opacity:0}
+  12%{opacity:1}
+  86%{opacity:1}
+  100%{transform:translateX(148vw);opacity:0}
 }
 
-/* the logo, with a speed streak passing over it */
-/* the logo waits just above the line, and is gone before the halves part */
-#intro .mark{position:absolute;left:50%;top:40%;width:min(360px,62vw);animation:introMark 1.3s var(--ease) both}
+/* the logo waits just above where the cars cross, and is gone before the halves part */
+#intro .mark{position:absolute;left:50%;top:33%;width:min(360px,62vw);animation:introMark calc(1.16s*var(--t)) var(--ease) both}
 #intro .mark img{display:block;width:100%;height:auto}
 @keyframes introMark{
   0%{opacity:0;transform:translate(-50%,-50%) translateY(16px) scale(.96)}
@@ -533,20 +559,6 @@ footer a:hover{color:#fff}
   78%{opacity:1;transform:translate(-50%,-50%) scale(1)}
   100%{opacity:0;transform:translate(-50%,-50%) scale(1.05)}
 }
-#intro .streak{
-  position:absolute;top:0;bottom:0;left:-38%;width:26%;filter:blur(2px);transform:skewX(-24deg);
-  background:linear-gradient(90deg,transparent,rgba(255,0,25,.9),transparent);
-  animation:introZoom .82s cubic-bezier(.45,0,.3,1) .3s both;
-}
-/* it travels on transform, not left: the page is still loading and layout is busy.
-   585% of its own width is the 152% of the screen it has to cross. */
-@keyframes introZoom{
-  0%{transform:skewX(-24deg) translateX(0);opacity:0}
-  18%{opacity:1}
-  78%{opacity:1}
-  100%{transform:skewX(-24deg) translateX(585%);opacity:0}
-}
-
 /* ============================================================
    REVEAL ANIMATION
    ============================================================ */
@@ -659,9 +671,10 @@ footer a:hover{color:#fff}
 <div id="intro" aria-hidden="true">
   <i class="pane top"></i>
   <i class="pane bot"></i>
-  <i class="split"></i>
+  <i class="car a"><i><b></b><b></b></i></i>
+  <i class="car b"><i><b></b><b></b></i></i>
+  <i class="car c"><i><b></b><b></b></i></i>
   <span class="mark"><img src="assets/brand/logo-white.svg" alt="" width="302" height="60"></span>
-  <i class="streak"></i>
 </div>
 <script>
 /* Runs on a fresh visit to the top of the page, once per session; ?intro replays it.
@@ -672,18 +685,23 @@ footer a:hover{color:#fff}
   var still = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
   var seen = false;
   try { seen = sessionStorage.getItem('r45-intro') === '1'; } catch(e){}
-  var on = !still && !location.hash && (!seen || location.search.indexOf('intro') > -1);
+  /* ?slow, or ?slow=4, plays it back slowly so it can be watched properly */
+  var m = /[?&]slow(?:=([0-9.]+))?/.exec(location.search);
+  var t = m ? Math.min(10, Math.max(1, parseFloat(m[1]) || 3)) : 1;
+  var forced = t > 1 || location.search.indexOf('intro') > -1;
+  var on = !still && !location.hash && (!seen || forced);
   window.r45Intro = { on:on, ready:function(fn){ if (fired) fn(); else go = fn; } };
   if (!on) return;
   try { sessionStorage.setItem('r45-intro', '1'); } catch(e){}
   h.className += ' intro-on';
+  if (t > 1) d.getElementById('intro').style.setProperty('--t', t);
   /* the hero rises while the halves are still parting */
-  setTimeout(function(){ fired = true; if (go) go(); }, 1480);
+  setTimeout(function(){ fired = true; if (go) go(); }, 1440 * t);
   setTimeout(function(){
     h.className = h.className.replace(/ ?intro-on/, '');
     var el = d.getElementById('intro');
     if (el) el.parentNode.removeChild(el);
-  }, 2150);
+  }, 2040 * t);
 })();
 </script>
 
