@@ -488,6 +488,69 @@ footer a:hover{color:#fff}
 #top:hover{background:var(--red)}
 
 /* ============================================================
+   INTRO — the shutter at the starting line
+   Only on a fresh visit to the top of the page; the little script
+   next to the markup decides, so nothing shows before it is up.
+   ============================================================ */
+#intro{display:none}
+.intro-on,.intro-on body{overflow:hidden}
+.intro-on #intro{display:block;position:fixed;inset:0;z-index:300;overflow:hidden;pointer-events:none}
+
+/* two halves of a livery cut; they overlap, so the screen stays covered */
+#intro .pane{
+  position:absolute;left:-10%;width:120%;height:74%;background:var(--ink);transform:skewY(-3deg);
+}
+#intro .pane::after{ /* chequered flag, framing the screen top and bottom */
+  content:'';position:absolute;left:0;right:0;height:10px;opacity:.5;
+  background-image:conic-gradient(#fff 90deg,transparent 90deg 180deg,#fff 180deg 270deg,transparent 270deg);
+  background-size:10px 10px;
+}
+/* the strips sit at 8% and 92% of the screen; as a share of a pane 74% tall they are
+   (8+16)/74 and (92-42)/74, so the skew never carries them out of frame */
+#intro .pane.top{top:-16%;animation:introTop .78s cubic-bezier(.52,0,.2,1) .92s both}
+#intro .pane.top::after{top:32.4%}
+#intro .pane.bot{bottom:-16%;animation:introBot .78s cubic-bezier(.52,0,.2,1) .92s both}
+#intro .pane.bot::after{top:67.6%}
+@keyframes introTop{to{transform:skewY(-3deg) translateY(-118%)}}
+@keyframes introBot{to{transform:skewY(-3deg) translateY(118%)}}
+
+/* the red cut down the middle, drawn just before the halves part */
+#intro .split{
+  position:absolute;left:-10%;top:50%;width:120%;height:3px;margin-top:-2px;
+  background:linear-gradient(90deg,var(--red-dk),var(--red));
+  transform-origin:left center;animation:introSplit .85s var(--ease) .55s both;
+}
+@keyframes introSplit{
+  0%{transform:skewY(-3deg) scaleX(0);opacity:1}
+  44%{transform:skewY(-3deg) scaleX(1);opacity:1}
+  100%{transform:skewY(-3deg) scaleX(1);opacity:0}
+}
+
+/* the logo, with a speed streak passing over it */
+/* the logo waits just above the line, and is gone before the halves part */
+#intro .mark{position:absolute;left:50%;top:40%;width:min(360px,62vw);animation:introMark 1s var(--ease) both}
+#intro .mark img{display:block;width:100%;height:auto}
+@keyframes introMark{
+  0%{opacity:0;transform:translate(-50%,-50%) translateY(16px) scale(.96)}
+  26%{opacity:1;transform:translate(-50%,-50%) scale(1)}
+  78%{opacity:1;transform:translate(-50%,-50%) scale(1)}
+  100%{opacity:0;transform:translate(-50%,-50%) scale(1.05)}
+}
+#intro .streak{
+  position:absolute;top:0;bottom:0;left:-38%;width:26%;filter:blur(2px);transform:skewX(-24deg);
+  background:linear-gradient(90deg,transparent,rgba(255,0,25,.9),transparent);
+  animation:introZoom .68s cubic-bezier(.45,0,.3,1) .24s both;
+}
+/* it travels on transform, not left: the page is still loading and layout is busy.
+   585% of its own width is the 152% of the screen it has to cross. */
+@keyframes introZoom{
+  0%{transform:skewX(-24deg) translateX(0);opacity:0}
+  18%{opacity:1}
+  78%{opacity:1}
+  100%{transform:skewX(-24deg) translateX(585%);opacity:0}
+}
+
+/* ============================================================
    REVEAL ANIMATION
    ============================================================ */
 [data-rise]{opacity:0;transform:translateY(24px);transition:opacity .7s var(--ease),transform .7s var(--ease)}
@@ -596,6 +659,38 @@ footer a:hover{color:#fff}
 </head>
 
 <body>
+<!-- the shutter; the script below removes it once it has run -->
+<div id="intro" aria-hidden="true">
+  <i class="pane top"></i>
+  <i class="pane bot"></i>
+  <i class="split"></i>
+  <span class="mark"><img src="assets/brand/logo-white.svg" alt="" width="302" height="60"></span>
+  <i class="streak"></i>
+</div>
+<script>
+/* Runs on a fresh visit to the top of the page, once per session; ?intro replays it.
+   It lives here, inline, so the shutter is up before anything is painted, and so the
+   page scrolls again even if a later script fails. */
+(function(){
+  var d = document, h = d.documentElement, go = null, fired = false;
+  var still = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var seen = false;
+  try { seen = sessionStorage.getItem('r45-intro') === '1'; } catch(e){}
+  var on = !still && !location.hash && (!seen || location.search.indexOf('intro') > -1);
+  window.r45Intro = { on:on, ready:function(fn){ if (fired) fn(); else go = fn; } };
+  if (!on) return;
+  try { sessionStorage.setItem('r45-intro', '1'); } catch(e){}
+  h.className += ' intro-on';
+  /* the hero rises while the halves are still parting */
+  setTimeout(function(){ fired = true; if (go) go(); }, 1200);
+  setTimeout(function(){
+    h.className = h.className.replace(/ ?intro-on/, '');
+    var el = d.getElementById('intro');
+    if (el) el.parentNode.removeChild(el);
+  }, 1800);
+})();
+</script>
+
 <div id="progress"><i></i></div>
 
 <!-- ============================ HEADER ============================ -->
@@ -1192,18 +1287,23 @@ document.addEventListener('keydown', function(e){ if (e.key === 'Escape') closeN
    ============================================================ */
 var revealables = document.querySelectorAll('[data-rise],[data-rise-l]');
 /* if the visitor arrives on a deep link, don't hide anything */
-if ('IntersectionObserver' in window && !location.hash){
-  var io = new IntersectionObserver(function(entries){
-    entries.forEach(function(e){
-      if (!e.isIntersecting) return;
-      e.target.classList.add('in');
-      io.unobserve(e.target);
-    });
-  }, {threshold:0.15, rootMargin:'0px 0px -8% 0px'});
-  revealables.forEach(function(el){ io.observe(el); });
-} else {
-  revealables.forEach(function(el){ el.classList.add('in'); });
+function startReveal(){
+  if ('IntersectionObserver' in window && !location.hash){
+    var io = new IntersectionObserver(function(entries){
+      entries.forEach(function(e){
+        if (!e.isIntersecting) return;
+        e.target.classList.add('in');
+        io.unobserve(e.target);
+      });
+    }, {threshold:0.15, rootMargin:'0px 0px -8% 0px'});
+    revealables.forEach(function(el){ io.observe(el); });
+  } else {
+    revealables.forEach(function(el){ el.classList.add('in'); });
+  }
 }
+/* behind the shutter nothing should rise yet: wait for it to open */
+if (window.r45Intro && window.r45Intro.on) window.r45Intro.ready(startReveal);
+else startReveal();
 
 document.getElementById('yr').textContent = new Date().getFullYear();
 
