@@ -3,10 +3,10 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Rota 45 Transportes — Sempre a horas</title>
+<title>Rota 45 Transportes</title>
 <meta name="description" content="Rota 45 Transportes, Unipessoal Lda. Transporte de mercadorias nacional e internacional. Mais de 20 anos de estrada. Entregas e recolhas 24h.">
 <meta name="theme-color" content="#FF0019">
-<meta property="og:title" content="Rota 45 Transportes — Sempre a horas">
+<meta property="og:title" content="Rota 45 Transportes">
 <meta property="og:description" content="Transporte de mercadorias nacional e internacional. Mais de 20 anos de estrada.">
 <meta property="og:type" content="website">
 <link rel="icon" type="image/png" href="assets/favicon.png">
@@ -555,11 +555,13 @@ footer a:hover{color:#fff}
   /* fleet: swipe through the photos */
   .fleet{
     grid-template-columns:none;grid-auto-flow:column;grid-auto-columns:82%;gap:12px;
-    overflow-x:auto;scroll-snap-type:x mandatory;scroll-padding-inline:var(--pad);
+    overflow-x:auto;overflow-y:hidden;scroll-snap-type:x mandatory;scroll-padding-inline:var(--pad);
     margin-inline:calc(-1 * var(--pad));padding:0 var(--pad) 4px;scrollbar-width:none;
   }
   .fleet::-webkit-scrollbar{display:none}
   .rig{scroll-snap-align:start}
+  /* photos off to the side only fade in: a vertical offset would make the strip scroll up and down */
+  .fleet .rig[data-rise]{transform:none}
   .rig h3{padding:18px 18px 20px;font-size:18px}
 
   /* quote + contacts */
@@ -1118,9 +1120,6 @@ function setLang(lang, remember){
     else if (lang === 'pt' && I18N.pt[n.dataset.i18n]) n.innerHTML = I18N.pt[n.dataset.i18n];
   });
   document.documentElement.lang = lang;
-  document.title = lang === 'en'
-    ? 'Rota 45 Transportes — Always on time'
-    : 'Rota 45 Transportes — Sempre a horas';
   langButtons.forEach(function(b){ b.setAttribute('aria-pressed', String(b.dataset.lang === lang)); });
   if (remember){ try { localStorage.setItem('r45-lang', lang); } catch(e){} }
 }
