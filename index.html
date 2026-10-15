@@ -299,13 +299,11 @@ section{position:relative}
 .sec--ink{background:var(--ink);color:#fff}
 
 .kicker{display:flex;align-items:center;gap:12px;margin-bottom:18px}
-.kicker b{font-family:var(--mono);font-size:12px;font-weight:700;letter-spacing:.18em;color:var(--red-dk)}
 .kicker .slash{width:24px;height:3px}
 .kicker span{
   font-family:var(--mono);font-size:12px;font-weight:500;letter-spacing:.2em;
   text-transform:uppercase;color:var(--grey-1);
 }
-.sec--ink .kicker b{color:var(--red)}
 .sec--ink .kicker span{color:var(--grey-2)}
 .sec-head{max-width:760px;margin-bottom:52px}
 .sec-head h2{font-size:clamp(32px,4.6vw,56px);line-height:1.15;text-wrap:balance} /* room for the italic Q tail */
@@ -350,7 +348,7 @@ section{position:relative}
 }
 .card:hover{transform:translateY(-5px);box-shadow:var(--shadow-lg);border-color:transparent}
 .card:hover::after{width:100%}
-.card-top{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:22px}
+.card-top{margin-bottom:22px}
 .card .ico{
   width:48px;height:48px;display:grid;place-items:center;
   background:var(--ink);border-radius:2px;color:#fff;
@@ -358,7 +356,6 @@ section{position:relative}
 }
 .card:hover .ico{background:var(--red);transform:rotate(-6deg) scale(1.06)}
 .card .ico svg{width:24px;height:24px}
-.card .no{font-family:var(--mono);font-size:11.5px;font-weight:700;letter-spacing:.18em;color:var(--grey-2)}
 .card h3{font-size:19px;line-height:1.06}
 .card p{margin-top:8px;font-size:15.5px;color:var(--grey-1)}
 
@@ -507,9 +504,9 @@ footer a:hover{color:#fff}
 }
 /* the strips sit at 8% and 92% of the screen; as a share of a pane 74% tall they are
    (8+16)/74 and (92-42)/74, so the skew never carries them out of frame */
-#intro .pane.top{top:-16%;animation:introTop .78s cubic-bezier(.52,0,.2,1) .92s both}
+#intro .pane.top{top:-16%;animation:introTop .86s cubic-bezier(.52,0,.2,1) 1.2s both}
 #intro .pane.top::after{top:32.4%}
-#intro .pane.bot{bottom:-16%;animation:introBot .78s cubic-bezier(.52,0,.2,1) .92s both}
+#intro .pane.bot{bottom:-16%;animation:introBot .86s cubic-bezier(.52,0,.2,1) 1.2s both}
 #intro .pane.bot::after{top:67.6%}
 @keyframes introTop{to{transform:skewY(-3deg) translateY(-118%)}}
 @keyframes introBot{to{transform:skewY(-3deg) translateY(118%)}}
@@ -518,7 +515,7 @@ footer a:hover{color:#fff}
 #intro .split{
   position:absolute;left:-10%;top:50%;width:120%;height:3px;margin-top:-2px;
   background:linear-gradient(90deg,var(--red-dk),var(--red));
-  transform-origin:left center;animation:introSplit .85s var(--ease) .55s both;
+  transform-origin:left center;animation:introSplit 1.05s var(--ease) .7s both;
 }
 @keyframes introSplit{
   0%{transform:skewY(-3deg) scaleX(0);opacity:1}
@@ -528,7 +525,7 @@ footer a:hover{color:#fff}
 
 /* the logo, with a speed streak passing over it */
 /* the logo waits just above the line, and is gone before the halves part */
-#intro .mark{position:absolute;left:50%;top:40%;width:min(360px,62vw);animation:introMark 1s var(--ease) both}
+#intro .mark{position:absolute;left:50%;top:40%;width:min(360px,62vw);animation:introMark 1.3s var(--ease) both}
 #intro .mark img{display:block;width:100%;height:auto}
 @keyframes introMark{
   0%{opacity:0;transform:translate(-50%,-50%) translateY(16px) scale(.96)}
@@ -539,7 +536,7 @@ footer a:hover{color:#fff}
 #intro .streak{
   position:absolute;top:0;bottom:0;left:-38%;width:26%;filter:blur(2px);transform:skewX(-24deg);
   background:linear-gradient(90deg,transparent,rgba(255,0,25,.9),transparent);
-  animation:introZoom .68s cubic-bezier(.45,0,.3,1) .24s both;
+  animation:introZoom .82s cubic-bezier(.45,0,.3,1) .3s both;
 }
 /* it travels on transform, not left: the page is still loading and layout is busy.
    585% of its own width is the 152% of the screen it has to cross. */
@@ -619,7 +616,6 @@ footer a:hover{color:#fff}
   .cards{grid-template-columns:1fr;gap:10px}
   .card{display:grid;grid-template-columns:44px minmax(0,1fr);gap:12px 14px;align-items:center;padding:18px}
   .card-top{margin:0}
-  .card .no{display:none}
   .card .ico{width:44px;height:44px}
   .card h3{font-size:17px}
   .card p{grid-column:1 / -1;margin-top:0;font-size:14.5px}
@@ -682,12 +678,12 @@ footer a:hover{color:#fff}
   try { sessionStorage.setItem('r45-intro', '1'); } catch(e){}
   h.className += ' intro-on';
   /* the hero rises while the halves are still parting */
-  setTimeout(function(){ fired = true; if (go) go(); }, 1200);
+  setTimeout(function(){ fired = true; if (go) go(); }, 1480);
   setTimeout(function(){
     h.className = h.className.replace(/ ?intro-on/, '');
     var el = d.getElementById('intro');
     if (el) el.parentNode.removeChild(el);
-  }, 1800);
+  }, 2150);
 })();
 </script>
 
@@ -825,7 +821,7 @@ footer a:hover{color:#fff}
       </div>
 
       <div class="about-body" data-rise style="transition-delay:.1s">
-        <div class="kicker"><b>01</b><span class="slash"></span><span data-i18n="kick.about">Sobre nós</span></div>
+        <div class="kicker"><span class="slash"></span><span data-i18n="kick.about">Sobre nós</span></div>
         <div class="sec-head" style="margin-bottom:24px">
           <h2 data-i18n="about.h2">Quem somos</h2>
         </div>
@@ -858,7 +854,7 @@ footer a:hover{color:#fff}
 <section class="sec sec--paper2" id="servicos">
   <div class="wrap">
     <div class="sec-head" data-rise>
-      <div class="kicker"><b>02</b><span class="slash"></span><span data-i18n="kick.services">Serviços</span></div>
+      <div class="kicker"><span class="slash"></span><span data-i18n="kick.services">Serviços</span></div>
       <h2 data-i18n="serv.h2">O que precisa,<br>quando precisa</h2>
     </div>
 
@@ -866,7 +862,6 @@ footer a:hover{color:#fff}
       <article class="card" data-rise>
         <div class="card-top">
           <div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c3 3.4 3 14.6 0 18M12 3c-3 3.4-3 14.6 0 18"/></svg></div>
-          <span class="no">S/01</span>
         </div>
         <h3 data-i18n="s1.t">Transporte nacional e internacional</h3>
         <p data-i18n="s1.d">Portugal e Europa.</p>
@@ -875,7 +870,6 @@ footer a:hover{color:#fff}
       <article class="card" data-rise style="transition-delay:.06s">
         <div class="card-top">
           <div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><path d="M2 16h13V8H2zM15 12h4l3 3v1h-7z"/><circle cx="7" cy="18.5" r="1.8"/><circle cx="18" cy="18.5" r="1.8"/></svg></div>
-          <span class="no">S/02</span>
         </div>
         <h3 data-i18n="s2.t">Atrelado personalizado</h3>
         <p data-i18n="s2.d">Máquinas, viaturas e cargas fora de medida.</p>
@@ -884,7 +878,6 @@ footer a:hover{color:#fff}
       <article class="card" data-rise style="transition-delay:.12s">
         <div class="card-top">
           <div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2L4 14h6l-1 8 9-12h-6z"/></svg></div>
-          <span class="no">S/03</span>
         </div>
         <h3 data-i18n="s3.t">Serviço expresso</h3>
         <p data-i18n="s3.d">Saída imediata, entrega direta.</p>
@@ -893,7 +886,6 @@ footer a:hover{color:#fff}
       <article class="card" data-rise style="transition-delay:.18s">
         <div class="card-top">
           <div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 7.5V12l3.5 2"/></svg></div>
-          <span class="no">S/04</span>
         </div>
         <h3 data-i18n="s4.t">Entregas e recolhas 24h</h3>
         <p data-i18n="s4.d">Também fora de horas e ao fim de semana.</p>
@@ -902,7 +894,6 @@ footer a:hover{color:#fff}
       <article class="card" data-rise>
         <div class="card-top">
           <div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-5 9 5-9 5z"/><path d="M3 9v6l9 5 9-5V9"/></svg></div>
-          <span class="no">S/05</span>
         </div>
         <h3 data-i18n="s5.t">Serviços a emigrantes</h3>
         <p data-i18n="s5.d">Mudanças e envios porta a porta.</p>
@@ -911,7 +902,6 @@ footer a:hover{color:#fff}
       <article class="card" data-rise style="transition-delay:.06s">
         <div class="card-top">
           <div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h16v14H4z"/><path d="M4 10h16M9 3v4M15 3v4"/></svg></div>
-          <span class="no">S/06</span>
         </div>
         <h3 data-i18n="s6.t">Provas desportivas e eventos</h3>
         <p data-i18n="s6.d">Material de competição, sempre a horas.</p>
@@ -920,7 +910,6 @@ footer a:hover{color:#fff}
       <article class="card" data-rise style="transition-delay:.12s">
         <div class="card-top">
           <div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M5 11V8a2 2 0 012-2h10a2 2 0 012 2v3"/><path d="M3 13a2 2 0 014 0v2h10v-2a2 2 0 014 0v5H3z"/><path d="M6 18v2M18 18v2"/></svg></div>
-          <span class="no">S/07</span>
         </div>
         <h3 data-i18n="s7.t">Mudanças e móveis</h3>
         <p data-i18n="s7.d">Casas e escritórios, com cuidado peça a peça.</p>
@@ -929,7 +918,6 @@ footer a:hover{color:#fff}
       <article class="card" data-rise style="transition-delay:.18s">
         <div class="card-top">
           <div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7h18v13H3z"/><path d="M9 7V5a1 1 0 011-1h4a1 1 0 011 1v2"/><path d="M3 13h18"/></svg></div>
-          <span class="no">S/08</span>
         </div>
         <h3 data-i18n="s8.t">Serviços empresariais</h3>
         <p data-i18n="s8.d">Distribuição regular e contratos à medida da sua empresa.</p>
@@ -942,7 +930,7 @@ footer a:hover{color:#fff}
 <section class="sec sec--ink" id="frota">
   <div class="wrap">
     <div class="sec-head" data-rise>
-      <div class="kicker"><b>03</b><span class="slash"></span><span data-i18n="kick.fleet">Frota</span></div>
+      <div class="kicker"><span class="slash"></span><span data-i18n="kick.fleet">Frota</span></div>
       <h2 data-i18n="fleet.h2">Equipamento<br>para cada carga</h2>
     </div>
 
@@ -979,7 +967,7 @@ footer a:hover{color:#fff}
   <div class="wrap">
     <div class="quote">
       <div data-rise>
-        <div class="kicker"><b>04</b><span class="slash"></span><span data-i18n="kick.quote">Orçamento</span></div>
+        <div class="kicker"><span class="slash"></span><span data-i18n="kick.quote">Orçamento</span></div>
         <div class="sec-head" style="margin-bottom:28px">
           <h2 data-i18n="q.h2">Peça uma<br>proposta</h2>
           <p class="lead" data-i18n="q.lead">Diga-nos o quê e para onde.</p>

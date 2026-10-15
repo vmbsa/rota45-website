@@ -181,21 +181,38 @@ export function mountRouteMap(opts){
        flag); seek() jumps to a point. With reduced motion it starts paused. */
     var trip = null, layer = false, playing = !still, phase = 0, last = null, listener = null;
     var HOLD = 1800;
+    /* the van's own heading, eased towards the road's. The route is a simplified line and
+       may zigzag; the van should not follow every kink of it. */
+    var facing = null, lastF = null;
     function runMs(){ return opts.runMs || Math.min(11000, Math.max(5000, trip.total / 250)); }
     function position(){
       if (!trip) return null;
       var now = performance.now(), run = runMs();
-      if (playing && last !== null) phase = (phase + Math.min(100, now - last)) % (run + HOLD);
+      var dt = last === null ? 16.7 : Math.min(100, now - last);
+      if (playing && last !== null) phase = (phase + dt) % (run + HOLD);
       last = now;
       var f = Math.min(1, phase / run);
       if (listener) listener(f, f * trip.total, trip.total);
-      return pointAt(trip, f * trip.total);
+      var p = pointAt(trip, f * trip.total);
+      /* a jump — a scrub of the timeline, or the loop starting over — turns at once */
+      var jumped = lastF === null || Math.abs(f - lastF) > 0.05;
+      lastF = f;
+      if (jumped) facing = p.heading;
+      else {
+        var k = 1 - Math.pow(0.9, dt / 16.7); /* eases the same at any frame rate */
+        var turn = (p.heading - facing + Math.PI * 3) % (Math.PI * 2) - Math.PI;
+        facing += turn * k;
+      }
+      p.heading = facing;
+      return p;
     }
 
     function play(line, dest){
       trip = measure(line);
       phase = 0;
       last = null;
+      facing = null;
+      lastF = null;
       /* the van goes in first so the route is drawn underneath it */
       if (!layer){
         layer = true;
@@ -238,17 +255,31 @@ function indexAt(trip, d){
   while (lo < hi){ var mid = (lo + hi) >> 1; if (trip.cum[mid] < d) lo = mid + 1; else hi = mid; }
   return lo;
 }
-/* point d metres along the route, facing a little further down the road */
+/* [lng, lat] exactly d metres along the route */
+function at(trip, d){
+  var l = trip.line, c = trip.cum;
+  d = Math.max(0, Math.min(trip.total, d));
+  var i = indexAt(trip, d);
+  var f = Math.min(1, Math.max(0, (d - c[i - 1]) / ((c[i] - c[i - 1]) || 1)));
+  return [l[i - 1][0] + (l[i][0] - l[i - 1][0]) * f, l[i - 1][1] + (l[i][1] - l[i - 1][1]) * f];
+}
+/* point d metres along the route, facing down the road.
+   The heading is read between two points interpolated either side of d. Taking it from
+   the route's own vertices instead made the van flick left and right, because at this
+   speed it crosses one every couple of frames. */
 function pointAt(trip, d){
   var l = trip.line;
   if (l.length < 2) return {lng:l[0][0], lat:l[0][1], heading:0};
-  var i = indexAt(trip, d), c = trip.cum;
-  var f = Math.min(1, Math.max(0, (d - c[i - 1]) / ((c[i] - c[i - 1]) || 1)));
-  var lng = l[i - 1][0] + (l[i][0] - l[i - 1][0]) * f, lat = l[i - 1][1] + (l[i][1] - l[i - 1][1]) * f;
-  var j = Math.min(l.length - 1, indexAt(trip, Math.min(trip.total, d + 4000)));
-  var k = Math.max(0, Math.min(j, i) - 1);
-  var east = (l[j][0] - l[k][0]) * Math.cos(lat * Math.PI / 180), north = l[j][1] - l[k][1];
-  return {lng:lng, lat:lat, heading:Math.atan2(north, east)};
+  var p = at(trip, d);
+  var span = Math.min(12000, Math.max(2000, trip.total / 150));
+  var a = at(trip, d - span), b = at(trip, d + span);
+  var east = (b[0] - a[0]) * Math.cos(p[1] * Math.PI / 180), north = b[1] - a[1];
+  if (!east && !north){ /* both ends landed on the same spot: fall back to this segment */
+    var i = indexAt(trip, d);
+    east = (l[i][0] - l[i - 1][0]) * Math.cos(p[1] * Math.PI / 180);
+    north = l[i][1] - l[i - 1][1];
+  }
+  return {lng:p[0], lat:p[1], heading:Math.atan2(north, east)};
 }
 
 /* darker, cleaner basemap: only place names, visible streets, red motorways, low 3D blocks */
